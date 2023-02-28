@@ -5,12 +5,12 @@ defmodule GenEditor do
 
   @doc """
   Hello world.
-
+  
   ## Examples
-
+  
       iex> GenEditor.hello()
       :world
-
+  
   """
   def hello do
     :world

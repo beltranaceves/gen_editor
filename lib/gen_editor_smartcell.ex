@@ -40,18 +40,18 @@ defmodule GenEditor.SmartCell do
         <div>Say what?</div>
         <input type="text" id="text" />
       `;
-
+    
       const textEl = document.getElementById("text");
       textEl.value = payload.text;
-
+    
       ctx.handleEvent("update_text", (text) => {
         textEl.value = text;
       });
-
+    
       textEl.addEventListener("change", (event) => {
         ctx.pushEvent("update_text", event.target.value);
       });
-
+    
       ctx.handleSync(() => {
         // Synchronously invokes change listeners
         document.activeElement &&

@@ -15,7 +15,8 @@ defmodule GenEditor.MixProject do
         maintainers: ["Beltrán Aceves Gil"],
         licenses: ["MIT"],
         links: %{
-          "GitHub" => "https://github.com/beltranaceves/gen_editor"}
+          "GitHub" => "https://github.com/beltranaceves/gen_editor"
+        }
       ]
     ]
   end
@@ -34,7 +35,7 @@ defmodule GenEditor.MixProject do
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
-      {:kino, "~> 0.8.1"},
+      {:kino, "~> 0.8.1"}
     ]
   end
 end
