@@ -1,6 +1,6 @@
-defmodule HexTemplate do
+defmodule GenEditor do
   @moduledoc """
-  Documentation for `HexTemplate`.
+  Documentation for `GenEditor`.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule HexTemplate do
 
   ## Examples
 
-      iex> HexTemplate.hello()
+      iex> GenEditor.hello()
       :world
 
   """

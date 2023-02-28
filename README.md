@@ -1,5 +1,5 @@
-# HexTemplate
-
+# GenEditor
+// TODO: rewrite remake
 Starter project for HEX packages. Includes a GH action to publish to hex.pm on push.
 
 1. First, create a key on your [Hex.pm dashboard](https://hex.pm/dashboard/keys).
