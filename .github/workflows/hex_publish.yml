@@ -1,9 +1,7 @@
 on:
   push:
-    # branches:
-    #     - release
-    # tags:
-    #   - '*'
+    branches:
+        - release
 
 jobs:
   publish:
