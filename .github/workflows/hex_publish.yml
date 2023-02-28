@@ -10,7 +10,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v2
 
-      - name: Publish package to hex.pm
-        uses: wesleimp/action-publish-hex@v1
+      - name: hex.pm publish - Elixir 1.14
+        uses: HypeRate/action-publish-hex@v2
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
