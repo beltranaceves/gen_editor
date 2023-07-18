@@ -5,7 +5,7 @@ defmodule GenEditor.Application do
 
   @impl true
   def start(_type, _args) do
-    Kino.SmartCell.register(GenEditor.SmartCell)
+    Kino.SmartCell.register(GenEditor.ElementEditor)
     children = []
     opts = [strategy: :one_for_one, name: KinoDB.Supervisor]
     Supervisor.start_link(children, opts)
