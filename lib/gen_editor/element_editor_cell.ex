@@ -17,7 +17,18 @@ defmodule GenEditor.ElementEditor do
     password = attrs["password"] || ""
     secret_access_key = attrs["secret_access_key"] || ""
 
+    # TODO: add method to bring all appropiate attributes from GenServer
+    # Append map to attrs, so that access is uniform
+
+    deps = %{
+      "context_list" => attrs["context_list"] || [],
+      "schema_list" => attrs["schema_list"] || [],
+      "web_list" => attrs["web_list"] || [],
+      "context_apps_list" => attrs["context_apps_list"] || []
+    }
+
     fields = %{
+      "UUID" => UUID.uuid1(),
       "variable" => Kino.SmartCell.prefixed_var_name("conn", attrs["variable"]),
       "type" => type,
       "hostname" => attrs["hostname"] || "localhost",
@@ -28,7 +39,6 @@ defmodule GenEditor.ElementEditor do
       "password" => password,
       "use_password_secret" => Map.has_key?(attrs, "password_secret") || password == "",
       "password_secret" => attrs["password_secret"] || "",
-      "database" => attrs["database"] || "",
       "project_id" => attrs["project_id"] || "",
       "default_dataset_id" => attrs["default_dataset_id"] || "",
       "credentials" => attrs["credentials"] || %{},
@@ -40,7 +50,35 @@ defmodule GenEditor.ElementEditor do
       "token" => attrs["token"] || "",
       "region" => attrs["region"] || "us-east-1",
       "workgroup" => attrs["workgroup"] || "",
-      "output_location" => attrs["output_location"] || ""
+      "output_location" => attrs["output_location"] || "",
+      # Element dependencies
+      "deps" => deps,
+      # App Element
+      "path" => attrs["path"] || "",
+      "app" => attrs["app"] || "",
+      "module" => attrs["module"] || "",
+      "database" => attrs["database"] || "",
+      "no_assets" => attrs["no_assets"] || "",
+      "no_esbuild" => attrs["no_esbuild"] || "",
+      "no_tailwind" => attrs["no_tailwind"] || "",
+      "no_ecto" => attrs["no_ecto"] || "",
+      "no_gettext" => attrs["no_gettext"] || "",
+      "no_html" => attrs["no_html"] || "",
+      "no_dashboard" => attrs["no_dashboard"] || "",
+      "no_live" => attrs["no_live"] || "",
+      "no_mailer" => attrs["no_mailer"] || "",
+      "verbose" => attrs["verbose"] || "",
+      "version" => attrs["version"] || "",
+      "install" => attrs["install"] || "",
+      "no_install" => attrs["no_install"] || "",
+      "binary_id" => attrs["binary_id"] || "",
+      # HTML Element
+      "context" => attrs["context"] || "",
+      "schema" => attrs["schema"] || "",
+      "web" => attrs["web"] || "",
+      "context_app" => attrs["context_app"] || "",
+      "no_schema" => attrs["no_schema"] || "",
+      "no_context" => attrs["no_context"] || "",
     }
 
     ctx =
@@ -117,11 +155,9 @@ defmodule GenEditor.ElementEditor do
     connection_keys =
       case fields["type"] do
         "app" ->
-          if fields["use_secret_access_key_secret"],
-            do:
-              ~w|access_key_id secret_access_key_secret token region workgroup output_location database|,
-            else:
-              ~w|access_key_id secret_access_key token region workgroup output_location database|
+          ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
+        "html" ->
+          ~w|context schema web context_app no_schema no_context|
         "sqlite" ->
           ~w|database_path|
 
@@ -149,13 +185,9 @@ defmodule GenEditor.ElementEditor do
     required_keys =
       case attrs["type"] do
         "app" ->
-          if Code.ensure_loaded?(:aws_credentials),
-              do: ~w|database|,
-              else:
-                if(Map.has_key?(attrs, "secret_access_key"),
-                  do: ~w|access_key_id secret_access_key region database|,
-                  else: ~w|access_key_id secret_access_key_secret region database|
-                )
+          ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
+        "html" ->
+          ~w|context schema web context_app no_schema no_context|
         "sqlite" ->
           ~w|database_path|
 
@@ -178,7 +210,7 @@ defmodule GenEditor.ElementEditor do
     conditional_keys =
       case attrs["type"] do
         "athena" -> ~w|workgroup output_location|
-        "app" -> ~w|workgroup output_location|
+        # "app" -> ~w|workgroup output_location|
         _ -> []
       end
 
@@ -253,7 +285,7 @@ defmodule GenEditor.ElementEditor do
           database: unquote(attrs["database"]),
           output_location: unquote(attrs["output_location"]),
           region: unquote(attrs["region"]),
-          secret_access_key: unquote(quoted_access_key(attrs)),
+          secret_access_key: unquote(attrs),
           token: unquote(attrs["token"]),
           workgroup: unquote(attrs["workgroup"])
         }
@@ -407,11 +439,7 @@ defmodule GenEditor.ElementEditor do
 
   defp help_box(%{"type" => "bigquery"}) do
     if Code.ensure_loaded?(Mint.HTTP) do
-      if running_on_google_metadata?() do
-        "You are running inside Google Cloud. Uploading the credentials above is optional."
-      else
-        ~s|You must upload your Google BigQuery Credentials (<a href="https://cloud.google.com/iam/docs/creating-managing-service-account-keys" target="_blank">find them here</a>) or authenticate your machine with <strong>gcloud</strong> CLI authentication.|
-      end
+      ~s|You must upload your Google BigQuery Credentials (<a href="https://cloud.google.com/iam/docs/creating-managing-service-account-keys" target="_blank">find them here</a>) or authenticate your machine with <strong>gcloud</strong> CLI authentication.|
     end
   end
 
@@ -422,11 +450,4 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp help_box(_ctx), do: nil
-
-  defp running_on_google_metadata? do
-    with {:ok, conn} <- Mint.HTTP.connect(:http, "metadata.google.internal", 80),
-          {:ok, _} <- Mint.HTTP.set_mode(conn, :passive),
-          do: true,
-          else: (_ -> false)
-  end
 end
