@@ -1,6 +1,5 @@
 defmodule GenEditor.ElementEditor do
-  @moduledoc false
-
+  @moduledoc
   # A smart cell used to establish connection to a database.
 
   use Kino.JS, assets_path: "lib/assets/element_editor"
@@ -17,7 +16,7 @@ defmodule GenEditor.ElementEditor do
     password = attrs["password"] || ""
     secret_access_key = attrs["secret_access_key"] || ""
 
-    # TODO: add method to bring all appropiate attributes from GenServer
+    # TODO: add method to bring all appropriate attributes from GenServer
     # Append map to attrs, so that access is uniform
 
     deps = %{
@@ -77,8 +76,10 @@ defmodule GenEditor.ElementEditor do
       "schema" => attrs["schema"] || "",
       "web" => attrs["web"] || "",
       "context_app" => attrs["context_app"] || "",
-      "no_schema" => attrs["no_schema"] || "",
-      "no_context" => attrs["no_context"] || "",
+      "no_schema" => attrs["no_schema"] || true,
+      "no_context" => attrs["no_context"] || true,
+      # Notifier Element
+      "message_name_list" => attrs["message_name_list"] || []
     }
 
     ctx =
@@ -156,8 +157,10 @@ defmodule GenEditor.ElementEditor do
       case fields["type"] do
         "app" ->
           ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
+
         "html" ->
           ~w|context schema web context_app no_schema no_context|
+
         "sqlite" ->
           ~w|database_path|
 
@@ -186,8 +189,10 @@ defmodule GenEditor.ElementEditor do
       case attrs["type"] do
         "app" ->
           ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
+
         "html" ->
           ~w|context schema web context_app no_schema no_context|
+
         "sqlite" ->
           ~w|database_path|
 
@@ -215,7 +220,7 @@ defmodule GenEditor.ElementEditor do
       end
 
     if all_fields_filled?(attrs, required_keys) and
-          any_fields_filled?(attrs, conditional_keys) do
+         any_fields_filled?(attrs, conditional_keys) do
       attrs |> to_quoted() |> Kino.SmartCell.quoted_to_string()
     else
       ""

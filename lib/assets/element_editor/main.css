@@ -120,7 +120,7 @@ input[required].empty {
 }
 
 .input-label {
-  display: block;
+  display: block; 
   margin-bottom: 2px;
   font-size: 0.875rem;
   color: var(--gray-800);
@@ -293,11 +293,33 @@ input::-webkit-inner-spin-button {
 
 /* Switch */
 
+.switch-input-label {
+  display: block;
+  align-self: center; 
+  margin-bottom: 2px;
+  font-size: 0.875rem;
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
+.switch-inline-input-label {
+  display: block;
+  align-self: center;
+  margin-bottom: 2px;
+  color: var(--gray-600);
+  font-weight: 500;
+  padding-right: 6px;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
 .switch-button {
   display: inline-block;
   position: relative;
   width: 56px;
   height: 28px;
+  padding-left: 10px;
+  padding-right: 10px;
   user-select: none;
 }
 

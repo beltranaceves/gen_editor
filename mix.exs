@@ -36,7 +36,9 @@ defmodule GenEditor.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
       {:kino, "~> 0.8.1"},
-      {:uuid, "~> 1.1.8"}
+      {:uuid, "~> 1.1.8"},
+      # TODO: change this to download from hex.pm
+      {:gen_dsl, path: "../gen_dsl"}
     ]
   end
 end
