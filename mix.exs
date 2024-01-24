@@ -38,7 +38,6 @@ defmodule GenEditor.MixProject do
       {:kino, "~> 0.8.1"},
       {:uuid, "~> 1.1.8"},
       # TODO: change this to download from hex.pm
-      {:gen_dsl, path: "../gen_dsl"}
     ]
   end
 end

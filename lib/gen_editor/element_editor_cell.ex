@@ -1,7 +1,4 @@
 defmodule GenEditor.ElementEditor do
-  @moduledoc
-  # A smart cell used to establish connection to a database.
-
   use Kino.JS, assets_path: "lib/assets/element_editor"
   use Kino.JS.Live
   use Kino.SmartCell, name: "Generable Element"
@@ -23,7 +20,8 @@ defmodule GenEditor.ElementEditor do
       "context_list" => attrs["context_list"] || [],
       "schema_list" => attrs["schema_list"] || [],
       "web_list" => attrs["web_list"] || [],
-      "context_apps_list" => attrs["context_apps_list"] || []
+      "context_apps_list" => attrs["context_apps_list"] || [],
+      "hashing_lib_list" => [ %{ label: "bcrypt", value: "bcrypt" }, %{ label: "argon2", value: "argon2" }, %{ label: "pbkdf2", value: "pbkdf2" } ]
     }
 
     fields = %{
@@ -79,7 +77,17 @@ defmodule GenEditor.ElementEditor do
       "no_schema" => attrs["no_schema"] || true,
       "no_context" => attrs["no_context"] || true,
       # Notifier Element
-      "message_name_list" => attrs["message_name_list"] || []
+      "notifier_name" => attrs["notifier_name"] || "",
+      "message_name_list" => attrs["message_name_list"] || [""],
+      # Auth Elements
+      "context" => attrs["context"] || "",
+      "schema" => attrs["schema"] || "",
+      "web" => attrs["web"] || "",
+      "hashing_lib" => attrs["hashing_lib"] || "",
+      "live" => attrs["live"] || true,
+      "no_live" => attrs["no_live"] || false,
+
+
     }
 
     ctx =
@@ -161,6 +169,12 @@ defmodule GenEditor.ElementEditor do
         "html" ->
           ~w|context schema web context_app no_schema no_context|
 
+        "auth" ->
+          ~w|context schema web hashing_libe live no_live|
+
+        "notifier" ->
+          ~w|notifier_name message_name_list context context_app|
+
         "sqlite" ->
           ~w|database_path|
 
@@ -192,6 +206,12 @@ defmodule GenEditor.ElementEditor do
 
         "html" ->
           ~w|context schema web context_app no_schema no_context|
+
+        "auth" ->
+          ~w|context schema web hashing_libe live no_live|
+
+        "notifier" ->
+          ~w|notifier_name message_name_list context context_app|
 
         "sqlite" ->
           ~w|database_path|
@@ -282,7 +302,7 @@ defmodule GenEditor.ElementEditor do
     join_quoted([goth_opts_block, conn_block])
   end
 
-  defp to_quoted(%{"type" => "app"} = attrs) do
+  defp to_quoted(%{"type" => "app"} = attrs) do # TODO: implement to quoted with GenDSL Element map attrs for all elements
     quote do
       unquote(quoted_var(attrs["variable"])) =
         %{
