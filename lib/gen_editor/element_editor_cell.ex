@@ -21,6 +21,7 @@ defmodule GenEditor.ElementEditor do
       "schema_list" => attrs["schema_list"] || [],
       "web_list" => attrs["web_list"] || [],
       "context_apps_list" => attrs["context_apps_list"] || [],
+      "module_list" => attrs["module_list"] || [],
       "hashing_lib_list" => [ %{ label: "bcrypt", value: "bcrypt" }, %{ label: "argon2", value: "argon2" }, %{ label: "pbkdf2", value: "pbkdf2" } ]
     }
 
@@ -79,14 +80,36 @@ defmodule GenEditor.ElementEditor do
       # Notifier Element
       "notifier_name" => attrs["notifier_name"] || "",
       "message_name_list" => attrs["message_name_list"] || [""],
-      # Auth Elements
+      # Auth Element
       "context" => attrs["context"] || "",
       "schema" => attrs["schema"] || "",
       "web" => attrs["web"] || "",
       "hashing_lib" => attrs["hashing_lib"] || "",
       "live" => attrs["live"] || true,
       "no_live" => attrs["no_live"] || false,
-
+      # Cert Element
+      "app" => attrs["app"] || "",
+      "domain" => attrs["domain"] || "",
+      "url" => attrs["url"] || "",
+      "output_path" => attrs["output_path"] || "",
+      "cert_name" => attrs["cert_name"] || "",
+      # Channel Element
+      "module" => attrs["module"] || "",
+      # TODO: rename all properties to match the element names in gen_dsl for easier use
+      # Presence Element
+      "module" => attrs["module"] || "",
+      # Secret Element
+      "length" => attrs["length"] || "",
+      # Schema Element
+      "module" => attrs["module"] || "",
+      "name" => attrs["name"] || "",
+      "table" => attrs["table"] || "",
+      "repo" => attrs["repo"] || "",
+      "migration_dir" => attrs["migration_dir"] || "",
+      "prefix" => attrs["prefix"] || "",
+      "no_migration" => attrs["no_migration"] || true,
+      "binary_id" => attrs["binary_id"] || false,
+      "context_app" => attrs["context_app"] || "",
 
     }
 
@@ -175,6 +198,21 @@ defmodule GenEditor.ElementEditor do
         "notifier" ->
           ~w|notifier_name message_name_list context context_app|
 
+        "cert" ->
+          ~w|app domain url output_path cert_name|
+
+        "channel" ->
+          ~w|module|
+
+        "presence" ->
+          ~w|module|
+
+        "secret" ->
+          ~w|length|
+
+        "schema" ->
+          ~w|module name table repo migration_dir prefix no_migration binary_id context_app|
+
         "sqlite" ->
           ~w|database_path|
 
@@ -212,6 +250,21 @@ defmodule GenEditor.ElementEditor do
 
         "notifier" ->
           ~w|notifier_name message_name_list context context_app|
+
+        "cert" ->
+          ~w|app domain url output_path cert_name|
+
+        "channel" ->
+          ~w|module|
+
+        "presence" ->
+          ~w|module|
+
+        "secret" ->
+          ~w|length|
+
+        "schema" ->
+          ~w|module name table repo migration_dir prefix no_migration binary_id context_app|
 
         "sqlite" ->
           ~w|database_path|
