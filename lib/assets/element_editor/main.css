@@ -1,3 +1,6 @@
+:root {
+  disabled-background-color: #f1a3a6;
+}
 .app {
   font-family: "Inter";
 
@@ -206,9 +209,15 @@ select.input {
   background-size: 10px;
   padding-right: 28px;
 }
-
+/* TODO: redesign the disabled appearance, use a library as starting point */
 select:disabled {
+  /* background-color: var(disabled-background-color); */
   background-color: #f1a3a6;
+}
+
+input:disabled {
+  background-color: #f1a3a6;
+  /* background-color: var(disabled-background-color); */
 }
 
 input::-webkit-outer-spin-button,
