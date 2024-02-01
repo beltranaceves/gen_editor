@@ -22,7 +22,33 @@ defmodule GenEditor.ElementEditor do
       "web_list" => attrs["web_list"] || [],
       "context_apps_list" => attrs["context_apps_list"] || [],
       "module_list" => attrs["module_list"] || [],
-      "hashing_lib_list" => [ %{ label: "bcrypt", value: "bcrypt" }, %{ label: "argon2", value: "argon2" }, %{ label: "pbkdf2", value: "pbkdf2" } ]
+      "hashing_lib_list" => [
+        %{label: "bcrypt", value: "bcrypt"},
+        %{label: "argon2", value: "argon2"},
+        %{label: "pbkdf2", value: "pbkdf2"}
+      ],
+      "datatype_list" => [
+        %{label: "id", value: "id"},
+        %{label: "binary_id", value: "binary_id"},
+        %{label: "string", value: "string"},
+        %{label: "integer", value: "integer"},
+        %{label: "float", value: "float"},
+        %{label: "boolean", value: "boolean"},
+        %{label: "date", value: "date"},
+        %{label: "time", value: "time"},
+        %{label: "datetime", value: "datetime"},
+        %{label: "map", value: "map"},
+        %{label: "array", value: "array"},
+        %{label: "binary", value: "binary"},
+        %{label: "decimal", value: "decimal"},
+        %{label: "time_usec", value: "time_usec"},
+        %{label: "naive_datetime", value: "naive_datetime"},
+        %{label: "naive_datetime_usec", value: "naive_datetime_usec"},
+        %{label: "utc_datetime", value: "utc_datetime"},
+        %{label: "utc_datetime_usec", value: "utc_datetime_usec"},
+        # TODO: allow for array and map datatypes
+        # TODO: turn this into a repo issue
+      ]
     }
 
     fields = %{
@@ -110,6 +136,7 @@ defmodule GenEditor.ElementEditor do
       "no_migration" => attrs["no_migration"] || true,
       "binary_id" => attrs["binary_id"] || false,
       "context_app" => attrs["context_app"] || "",
+      "fields" => attrs["fields"] || [%{"datatype" => "string", "field_name" => "username"}],
 
     }
 
@@ -211,7 +238,7 @@ defmodule GenEditor.ElementEditor do
           ~w|length|
 
         "schema" ->
-          ~w|module name table repo migration_dir prefix no_migration binary_id context_app|
+          ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
 
         "sqlite" ->
           ~w|database_path|
@@ -264,7 +291,7 @@ defmodule GenEditor.ElementEditor do
           ~w|length|
 
         "schema" ->
-          ~w|module name table repo migration_dir prefix no_migration binary_id context_app|
+          ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
 
         "sqlite" ->
           ~w|database_path|
@@ -355,7 +382,8 @@ defmodule GenEditor.ElementEditor do
     join_quoted([goth_opts_block, conn_block])
   end
 
-  defp to_quoted(%{"type" => "app"} = attrs) do # TODO: implement to quoted with GenDSL Element map attrs for all elements
+  # TODO: implement to quoted with GenDSL Element map attrs for all elements
+  defp to_quoted(%{"type" => "app"} = attrs) do
     quote do
       unquote(quoted_var(attrs["variable"])) =
         %{
