@@ -45,7 +45,7 @@ defmodule GenEditor.ElementEditor do
         %{label: "naive_datetime", value: "naive_datetime"},
         %{label: "naive_datetime_usec", value: "naive_datetime_usec"},
         %{label: "utc_datetime", value: "utc_datetime"},
-        %{label: "utc_datetime_usec", value: "utc_datetime_usec"},
+        %{label: "utc_datetime_usec", value: "utc_datetime_usec"}
         # TODO: allow for array and map datatypes
         # TODO: turn this into a repo issue
       ]
@@ -136,8 +136,7 @@ defmodule GenEditor.ElementEditor do
       "no_migration" => attrs["no_migration"] || true,
       "binary_id" => attrs["binary_id"] || false,
       "context_app" => attrs["context_app"] || "",
-      "fields" => attrs["fields"] || [%{"datatype" => "string", "field_name" => "username"}],
-
+      "fields" => attrs["fields"] || [%{"datatype" => "string", "field_name" => "username"}]
     }
 
     ctx =
@@ -209,90 +208,148 @@ defmodule GenEditor.ElementEditor do
 
   @default_keys ["type", "variable"]
 
+  defp required_attrs_from_type(type) do
+    case type do
+      "app" ->
+        ~w|path|
+
+      "html" ->
+        ~w|context|
+
+      "auth" ->
+        ~w|context |
+
+      "notifier" ->
+        ~w|context notifier_name message_name_list|
+
+      "cert" ->
+        ~w||
+
+      "channel" ->
+        ~w|module|
+
+      "presence" ->
+        ~w||
+
+      "secret" ->
+        ~w||
+
+      "schema" ->
+        ~w|module name path|
+
+      "sqlite" ->
+        ~w|database_path|
+
+      "bigquery" ->
+        ~w|project_id default_dataset_id credentials|
+
+      "athena" ->
+        ~w|access_key_id secret_access_key_secret token region workgroup output_location database|
+
+      type when type in ["postgres", "mysql"] ->
+        ~w|hostname port use_ipv6 username password_secret|
+    end
+  end
+
+  defp optional_attrs_from_type(type) do
+    case type do
+      "app" ->
+        ~w|umbrella app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
+
+      "html" ->
+        ~w|iweb context_app no_schema no_context|
+
+      "auth" ->
+        ~w|web hashing_lib no_live live|
+
+      "notifier" ->
+        ~w|context_app|
+
+      "cert" ->
+        ~w|app domain url output_path cert_name|
+
+      "channel" ->
+        ~w||
+
+      "presence" ->
+        ~w|module|
+
+      "secret" ->
+        ~w|length|
+
+      "schema" ->
+        ~w|no_migration table binary_id repo migration_dir prefix context_app|
+
+      "sqlite" ->
+        ~w||
+
+      "bigquery" ->
+        ~w||
+
+      "athena" ->
+        ~w||
+
+      type when type in ["postgres", "mysql"] ->
+        ~w||
+
+      _ ->
+        ~w||
+    end
+  end
+
+  defp attrs_from_type(type) do
+    case type do
+      "app" ->
+        ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
+
+      "html" ->
+        ~w|context schema web context_app no_schema no_context|
+
+      "auth" ->
+        ~w|context schema web hashing_libe live no_live|
+
+      "notifier" ->
+        ~w|notifier_name message_name_list context context_app|
+
+      "cert" ->
+        ~w|app domain url output_path cert_name|
+
+      "channel" ->
+        ~w|module|
+
+      "presence" ->
+        ~w|module|
+
+      "secret" ->
+        ~w|length|
+
+      "schema" ->
+        ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
+
+      "sqlite" ->
+        ~w|database_path|
+
+      "bigquery" ->
+        ~w|project_id default_dataset_id credentials|
+
+      "athena" ->
+        ~w|access_key_id secret_access_key_secret token region workgroup output_location database|
+
+      type when type in ["postgres", "mysql"] ->
+        ~w|hostname port use_ipv6 username password_secret|
+    end
+  end
+
   @impl true
   def to_attrs(%{assigns: %{fields: fields}}) do
-    connection_keys =
-      case fields["type"] do
-        "app" ->
-          ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
-
-        "html" ->
-          ~w|context schema web context_app no_schema no_context|
-
-        "auth" ->
-          ~w|context schema web hashing_libe live no_live|
-
-        "notifier" ->
-          ~w|notifier_name message_name_list context context_app|
-
-        "cert" ->
-          ~w|app domain url output_path cert_name|
-
-        "channel" ->
-          ~w|module|
-
-        "presence" ->
-          ~w|module|
-
-        "secret" ->
-          ~w|length|
-
-        "schema" ->
-          ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
-
-        "sqlite" ->
-          ~w|database_path|
-
-        "bigquery" ->
-          ~w|project_id default_dataset_id credentials|
-
-        "athena" ->
-          if fields["use_secret_access_key_secret"],
-            do:
-              ~w|access_key_id secret_access_key_secret token region workgroup output_location database|,
-            else:
-              ~w|access_key_id secret_access_key token region workgroup output_location database|
-
-        type when type in ["postgres", "mysql"] ->
-          if fields["use_password_secret"],
-            do: ~w|database hostname port use_ipv6 username password_secret|,
-            else: ~w|database hostname port use_ipv6 username password|
-      end
-
-    Map.take(fields, @default_keys ++ connection_keys)
+    cell_keys = attrs_from_type(fields["type"])
+    Map.take(fields, @default_keys ++ cell_keys)
   end
 
   @impl true
   def to_source(attrs) do
     required_keys =
       case attrs["type"] do
-        "app" ->
-          ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
-
-        "html" ->
-          ~w|context schema web context_app no_schema no_context|
-
-        "auth" ->
-          ~w|context schema web hashing_libe live no_live|
-
-        "notifier" ->
-          ~w|notifier_name message_name_list context context_app|
-
-        "cert" ->
-          ~w|app domain url output_path cert_name|
-
-        "channel" ->
-          ~w|module|
-
-        "presence" ->
-          ~w|module|
-
-        "secret" ->
-          ~w|length|
-
-        "schema" ->
-          ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
-
         "sqlite" ->
           ~w|database_path|
 
@@ -308,15 +365,48 @@ defmodule GenEditor.ElementEditor do
                 else: ~w|access_key_id secret_access_key_secret region database|
               )
 
+        _ ->
+          []
+
         type when type in ["postgres", "mysql"] ->
           ~w|hostname port|
       end
 
     conditional_keys =
       case attrs["type"] do
-        "athena" -> ~w|workgroup output_location|
+        "app" ->
+          ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
+
+        "html" ->
+          ~w|context schema web context_app no_schema no_context|
+
+        "auth" ->
+          ~w|context schema web hashing_libe live no_live|
+
+        "notifier" ->
+          ~w|notifier_name message_name_list context context_app|
+
+        "cert" ->
+          ~w|app domain url output_path cert_name|
+
+        "channel" ->
+          ~w|module|
+
+        "presence" ->
+          ~w|module|
+
+        "secret" ->
+          ~w|length|
+
+        "schema" ->
+          ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
+
+        "athena" ->
+          ~w|workgroup output_location|
+
         # "app" -> ~w|workgroup output_location|
-        _ -> []
+        _ ->
+          []
       end
 
     if all_fields_filled?(attrs, required_keys) and
@@ -328,13 +418,13 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp all_fields_filled?(attrs, keys) do
-    not Enum.any?(keys, fn key -> attrs[key] in [nil, ""] end)
+    not Enum.any?(keys, fn key -> attrs[key] in [nil, "", []] end)
   end
 
   defp any_fields_filled?(_, []), do: true
 
   defp any_fields_filled?(attrs, keys) do
-    Enum.any?(keys, fn key -> attrs[key] not in [nil, ""] end)
+    Enum.any?(keys, fn key -> attrs[key] not in [nil, "", []] end)
   end
 
   defp to_quoted(%{"type" => "sqlite"} = attrs) do
@@ -414,6 +504,30 @@ defmodule GenEditor.ElementEditor do
           workgroup: unquote(attrs["workgroup"])
         )
 
+      :ok
+    end
+  end
+
+  defp to_quoted(%{"type" => "html"} = attrs) do
+    IO.puts("HTML Element not implemented yet")
+
+    quote do
+      unquote(quoted_var(attrs["variable"])) =
+        %{
+          context: unquote(attrs["context"]),
+          schema: unquote(attrs["schema"]),
+          web: unquote(attrs["web"]),
+          context_app: unquote(attrs["context_app"]),
+          no_schema: unquote(attrs["no_schema"]),
+          no_context: unquote(attrs["no_context"])
+        }
+
+      :ok
+    end
+  end
+
+  defp to_quoted(attr) do
+    quote do
       :ok
     end
   end
