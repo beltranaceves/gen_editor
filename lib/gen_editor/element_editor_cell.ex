@@ -210,31 +210,31 @@ defmodule GenEditor.ElementEditor do
 
   defp required_attrs_from_type(type) do
     case type do
-      "app" ->
+      "App" ->
         ~w|path|
 
-      "html" ->
+      "Html" ->
         ~w|context|
 
-      "auth" ->
+      "Auth" ->
         ~w|context |
 
-      "notifier" ->
+      "Notifier" ->
         ~w|context notifier_name message_name_list|
 
-      "cert" ->
+      "Cert" ->
         ~w||
 
-      "channel" ->
+      "Channel" ->
         ~w|module|
 
-      "presence" ->
+      "Presence" ->
         ~w||
 
-      "secret" ->
+      "Secret" ->
         ~w||
 
-      "schema" ->
+      "Schema" ->
         ~w|module name path|
 
       "sqlite" ->
@@ -248,36 +248,39 @@ defmodule GenEditor.ElementEditor do
 
       type when type in ["postgres", "mysql"] ->
         ~w|hostname port use_ipv6 username password_secret|
+
+      _ ->
+        ~w||
     end
   end
 
   defp optional_attrs_from_type(type) do
     case type do
-      "app" ->
+      "App" ->
         ~w|umbrella app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
 
-      "html" ->
+      "Html" ->
         ~w|iweb context_app no_schema no_context|
 
-      "auth" ->
+      "Auth" ->
         ~w|web hashing_lib no_live live|
 
-      "notifier" ->
+      "Notifier" ->
         ~w|context_app|
 
-      "cert" ->
+      "Cert" ->
         ~w|app domain url output_path cert_name|
 
-      "channel" ->
+      "Channel" ->
         ~w||
 
-      "presence" ->
+      "Presence" ->
         ~w|module|
 
-      "secret" ->
+      "Secret" ->
         ~w|length|
 
-      "schema" ->
+      "Schema" ->
         ~w|no_migration table binary_id repo migration_dir prefix context_app|
 
       "sqlite" ->
@@ -299,31 +302,31 @@ defmodule GenEditor.ElementEditor do
 
   defp attrs_from_type(type) do
     case type do
-      "app" ->
+      "App" ->
         ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
 
-      "html" ->
+      "Html" ->
         ~w|context schema web context_app no_schema no_context|
 
-      "auth" ->
+      "Auth" ->
         ~w|context schema web hashing_libe live no_live|
 
-      "notifier" ->
+      "Notifier" ->
         ~w|notifier_name message_name_list context context_app|
 
-      "cert" ->
+      "Cert" ->
         ~w|app domain url output_path cert_name|
 
-      "channel" ->
+      "Channel" ->
         ~w|module|
 
-      "presence" ->
+      "Presence" ->
         ~w|module|
 
-      "secret" ->
+      "Secret" ->
         ~w|length|
 
-      "schema" ->
+      "Schema" ->
         ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
 
       "sqlite" ->
@@ -337,6 +340,9 @@ defmodule GenEditor.ElementEditor do
 
       type when type in ["postgres", "mysql"] ->
         ~w|hostname port use_ipv6 username password_secret|
+
+      _ ->
+        ~w||
     end
   end
 
@@ -348,66 +354,9 @@ defmodule GenEditor.ElementEditor do
 
   @impl true
   def to_source(attrs) do
-    required_keys =
-      case attrs["type"] do
-        "sqlite" ->
-          ~w|database_path|
+    required_keys = required_attrs_from_type(attrs["type"])
 
-        "bigquery" ->
-          ~w|project_id|
-
-        "athena" ->
-          if Code.ensure_loaded?(:aws_credentials),
-            do: ~w|database|,
-            else:
-              if(Map.has_key?(attrs, "secret_access_key"),
-                do: ~w|access_key_id secret_access_key region database|,
-                else: ~w|access_key_id secret_access_key_secret region database|
-              )
-
-        _ ->
-          []
-
-        type when type in ["postgres", "mysql"] ->
-          ~w|hostname port|
-      end
-
-    conditional_keys =
-      case attrs["type"] do
-        "app" ->
-          ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
-
-        "html" ->
-          ~w|context schema web context_app no_schema no_context|
-
-        "auth" ->
-          ~w|context schema web hashing_libe live no_live|
-
-        "notifier" ->
-          ~w|notifier_name message_name_list context context_app|
-
-        "cert" ->
-          ~w|app domain url output_path cert_name|
-
-        "channel" ->
-          ~w|module|
-
-        "presence" ->
-          ~w|module|
-
-        "secret" ->
-          ~w|length|
-
-        "schema" ->
-          ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
-
-        "athena" ->
-          ~w|workgroup output_location|
-
-        # "app" -> ~w|workgroup output_location|
-        _ ->
-          []
-      end
+    conditional_keys = optional_attrs_from_type(attrs["type"])
 
     if all_fields_filled?(attrs, required_keys) and
          any_fields_filled?(attrs, conditional_keys) do
