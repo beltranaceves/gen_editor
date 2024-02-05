@@ -48,6 +48,7 @@ defmodule GenEditor.ElementEditor do
 
     fields = %{
       "UUID" => UUID.uuid1(),
+      "placeholder" => "Enter a value",
       "variable" => Kino.SmartCell.prefixed_var_name("conn", attrs["variable"]),
       "type" => type,
       # Element dependencies
@@ -116,7 +117,10 @@ defmodule GenEditor.ElementEditor do
       "no_merge_with_existing_context" => attrs["no_merge_with_existing_context"] || false,
       "merge_with_existing_context" => attrs["merge_with_existing_context"] || true,
       "no_schema" => attrs["no_schema"] || false,
-      "standalone" => attrs["standalone"]
+      "standalone" => case attrs["standalone"] do
+        nil -> false
+        _ -> attrs["standalone"]
+      end
     }
 
     ctx =
@@ -147,14 +151,27 @@ defmodule GenEditor.ElementEditor do
 
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
+    # value = case field do
+    #   "standalone" ->
+    #     case value do
+    #       nil -> false
+    #       _ -> value
+    #     end
+    #   _ ->
+    #     value
+    # end
     updated_fields = to_updates(ctx.assigns.fields, field, value)
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
 
     updated_deps = %{} |> Map.put("deps",
       (ctx.assigns.fields["deps"]) |> Map.merge(update_deps(ctx)))
 
+
     ctx = update(ctx, :fields, &Map.merge(&1, updated_deps))
 
+
+
+    {:noreply, ctx}
     missing_dep = missing_dep(ctx.assigns.fields)
 
     ctx =
@@ -165,7 +182,7 @@ defmodule GenEditor.ElementEditor do
         assign(ctx, missing_dep: missing_dep)
       end
 
-    broadcast_event(ctx, "update", %{"fields" => updated_fields})
+    broadcast_event(ctx, "update", %{"fields" => ctx.assigns.fields})
 
     {:noreply, ctx}
   end
@@ -183,6 +200,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   def update_deps(ctx) do
+    # IO.puts("updating deps: #{inspect(ctx)}")
     %{
       "context_list" => get_context_list(ctx),
       "schema_list" => get_schema_list(ctx.assigns.fields),
@@ -195,15 +213,21 @@ defmodule GenEditor.ElementEditor do
   def get_context_list(ctx) do
     # IO.puts("GET CONTEXT LIST: #{inspect(ctx)}")
     case ctx do
-      %{} ->
-        []
-
       context ->
-        context
-        |> Map.fetch!(:blueprint)
-        |> Map.fetch!(:metadata)
-        |> Enum.filter(fn element -> element["type"] == "Context" end)
-        |> Enum.map(fn element -> %{label: element["context"], value: element["context"] } end)
+        IO.puts("CONTEXT: #{inspect(context)}")
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "Context" end)
+                |> Enum.map(fn element -> %{label: element["context"], value: element["context"] } end)
+              _ ->
+                []
+            end
+          _ ->
+            []
+        end
     end
   end
 
@@ -213,7 +237,7 @@ defmodule GenEditor.ElementEditor do
         []
 
       context ->
-        context
+        context.assigns
         |> Map.fetch!(:blueprint)
         |> Map.fetch!(:metadata)
         |> Enum.filter(fn element -> element["type"] == "Schema" end)
