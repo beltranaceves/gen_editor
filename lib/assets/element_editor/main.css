@@ -23,7 +23,9 @@
   --yellow-100: #fff7ec;
   --yellow-600: #ffa83f;
 
- --red-300: #f1a3a6;
+  --red-300: #f1a3a6;
+
+  --disabled-100: #e7d5d6;
 }
 
 input,
@@ -217,11 +219,11 @@ select.input {
 /* TODO: redesign the disabled appearance, use a library as starting point */
 select:disabled {
   /* background-color: var(disabled-background-color); */
-  background-color: #f1a3a6;
+  background-color: var(--disabled-100);
 }
 
 input:disabled {
-  background-color: #f1a3a6;
+  background-color: var(--disabled-100);
   /* background-color: var(disabled-background-color); */
 }
 
