@@ -3,7 +3,7 @@ defmodule GenEditor.ElementEditor do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Generable Element"
 
-  @generable_elements ~w|App Html Auth Notifier Cert Channel Presence Secret Schema|
+  @generable_elements ~w|App Html Auth Notifier Cert Channel Presence Secret Schema Context|
 
   @impl true
   def init(attrs, ctx) do
@@ -42,7 +42,7 @@ defmodule GenEditor.ElementEditor do
         %{label: "utc_datetime", value: "utc_datetime"},
         %{label: "utc_datetime_usec", value: "utc_datetime_usec"}
         # TODO: allow for array and map datatypes
-        # TODO: turn this into a repo issue
+        # TODO: turn this into a gen_editor repository issue
       ]
     }
 
@@ -116,7 +116,7 @@ defmodule GenEditor.ElementEditor do
       "no_merge_with_existing_context" => attrs["no_merge_with_existing_context"] || false,
       "merge_with_existing_context" => attrs["merge_with_existing_context"] || true,
       "no_schema" => attrs["no_schema"] || false,
-      "standalone" => attrs["standalone"] || true,
+      "standalone" => attrs["standalone"] || true
     }
 
     ctx =
@@ -124,7 +124,8 @@ defmodule GenEditor.ElementEditor do
         fields: fields,
         missing_dep: missing_dep(fields),
         help_box: help_box(fields),
-        has_aws_credentials: Code.ensure_loaded?(:aws_credentials)
+        has_aws_credentials: Code.ensure_loaded?(:aws_credentials),
+        blueprint: %{}
       )
 
     {:ok, ctx}
@@ -136,7 +137,9 @@ defmodule GenEditor.ElementEditor do
       fields: ctx.assigns.fields,
       missing_dep: ctx.assigns.missing_dep,
       help_box: ctx.assigns.help_box,
-      has_aws_credentials: ctx.assigns.has_aws_credentials
+      has_aws_credentials: ctx.assigns.has_aws_credentials,
+      blueprint: ctx.assigns.blueprint || %{},
+      first_render: true
     }
 
     {:ok, payload, ctx}
@@ -207,6 +210,7 @@ defmodule GenEditor.ElementEditor do
 
       "Context" ->
         ~w|context|
+
       _ ->
         ~w||
     end
@@ -280,6 +284,7 @@ defmodule GenEditor.ElementEditor do
 
       "Context" ->
         ~w|context no_merge_with_existing_context merge_with_existing_context no_schema|
+
       _ ->
         ~w||
     end
@@ -292,17 +297,38 @@ defmodule GenEditor.ElementEditor do
   end
 
   @impl true
+  def to_attrs(%{assigns: %{blueprint: blueprint}}) do
+    blueprint
+  end
+
+  @impl true
+  def to_attrs(ctx) do
+    IO.puts("to_attrs NO MATCH: #{inspect(ctx)}")
+    ctx
+  end
+
+  @impl true
   def to_source(attrs) do
     IO.puts("Original attrs: #{inspect(attrs)}")
-    required_keys = required_attrs_from_type(attrs["type"])
 
-    _conditional_keys = optional_attrs_from_type(attrs["type"])
+    case attrs |> Map.fetch("type") do
+      {:ok, type} ->
+        required_keys = required_attrs_from_type(type)
 
-    if all_fields_filled?(attrs, required_keys) do
-      attrs |> to_quoted() |> Kino.SmartCell.quoted_to_string()
-    else
-      IO.puts("Not all required fields are filled")
-      ""
+        _conditional_keys = optional_attrs_from_type(attrs["type"])
+
+        if all_fields_filled?(attrs, required_keys) do
+          attrs |> to_quoted() |> Kino.SmartCell.quoted_to_string()
+        else
+          quote do
+            {:error, "Not all required fields are filled"}
+          end
+          |> Kino.SmartCell.quoted_to_string()
+        end
+
+      _ ->
+        IO.puts("No type found")
+        ""
     end
   end
 
@@ -338,6 +364,25 @@ defmodule GenEditor.ElementEditor do
           ],
           posttasks: []
         }
+      {:ok, "Added: App"}
+    end
+  end
+
+  defp to_quoted(%{"type" => type, "standalone" => false} = attrs)
+       when type in @generable_elements do
+    IO.puts("DEPENDENCY DETECTED: #{inspect(attrs)}")
+
+    attrs =
+      attrs
+      |> Map.filter(fn {_key, val} ->
+        val not in [nil, "", []]
+      end)
+
+    quote do
+      blueprint =
+        blueprint
+        |> Map.update!(:metadata, &(&1 ++ [unquote(attrs)]))
+      {:ok, "Added: " <> unquote(attrs["type"])}
     end
   end
 
@@ -349,7 +394,10 @@ defmodule GenEditor.ElementEditor do
       end)
 
     quote do
-      unquote(attrs)
+      blueprint =
+        blueprint
+        |> Map.update!(:generable_elements, &(&1 ++ [unquote(attrs)]))
+      {:ok, "Added: " <> unquote(attrs["type"])}
     end
   end
 
@@ -359,6 +407,29 @@ defmodule GenEditor.ElementEditor do
     quote do
       :ok
     end
+  end
+
+  @impl true
+  def scan_binding(pid, binding, env) do
+    # IO.puts("Scanning binding: #{inspect(binding)}")
+    send(pid, {:scan_binding_result, binding, env})
+  end
+
+  @impl true
+  def handle_info({:scan_binding_result, binding, _env}, ctx) do
+    IO.puts("Scanning binding result: #{inspect(binding)}")
+
+    ctx =
+      case List.keyfind(binding, :blueprint, 0) do
+        {_key, blueprint} ->
+          assign(ctx, blueprint: blueprint)
+
+        # broadcast_event(ctx, "blueprint", blueprint) # TODO: check again that this is not needed to propagate the blueprint, and document why it is being shared by other method
+        nil ->
+          ctx
+      end
+
+    {:noreply, ctx}
   end
 
   defp missing_dep(%{"type" => "postgres"}) do
