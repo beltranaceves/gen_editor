@@ -3,16 +3,11 @@ defmodule GenEditor.ElementEditor do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Generable Element"
 
-  @default_port_by_type %{"postgres" => 5432, "mysql" => 3306}
+  @generable_elements ~w|App Html Auth Notifier Cert Channel Presence Secret Schema|
 
   @impl true
   def init(attrs, ctx) do
-    type = attrs["type"] || default_db_type()
-    default_port = @default_port_by_type[type]
-
-    password = attrs["password"] || ""
-    secret_access_key = attrs["secret_access_key"] || ""
-
+    type = attrs["type"] || "App"
     # TODO: add method to bring all appropriate attributes from GenServer
     # Append map to attrs, so that access is uniform
 
@@ -55,26 +50,6 @@ defmodule GenEditor.ElementEditor do
       "UUID" => UUID.uuid1(),
       "variable" => Kino.SmartCell.prefixed_var_name("conn", attrs["variable"]),
       "type" => type,
-      "hostname" => attrs["hostname"] || "localhost",
-      "database_path" => attrs["database_path"] || "",
-      "port" => attrs["port"] || default_port,
-      "use_ipv6" => false,
-      "username" => attrs["username"] || "",
-      "password" => password,
-      "use_password_secret" => Map.has_key?(attrs, "password_secret") || password == "",
-      "password_secret" => attrs["password_secret"] || "",
-      "project_id" => attrs["project_id"] || "",
-      "default_dataset_id" => attrs["default_dataset_id"] || "",
-      "credentials" => attrs["credentials"] || %{},
-      "access_key_id" => attrs["access_key_id"] || "",
-      "secret_access_key" => secret_access_key,
-      "use_secret_access_key_secret" =>
-        Map.has_key?(attrs, "secret_access_key_secret") || secret_access_key == "",
-      "secret_access_key_secret" => attrs["secret_access_key_secret"] || "",
-      "token" => attrs["token"] || "",
-      "region" => attrs["region"] || "us-east-1",
-      "workgroup" => attrs["workgroup"] || "",
-      "output_location" => attrs["output_location"] || "",
       # Element dependencies
       "deps" => deps,
       # App Element
@@ -94,7 +69,7 @@ defmodule GenEditor.ElementEditor do
       "verbose" => attrs["verbose"] || "",
       "version" => attrs["version"] || "",
       "install" => attrs["install"] || "",
-      "no_install" => attrs["no_install"] || "",
+      "no_install" => attrs["no_install"] || false,
       "binary_id" => attrs["binary_id"] || "",
       # HTML Element
       "context" => attrs["context"] || "",
@@ -136,7 +111,12 @@ defmodule GenEditor.ElementEditor do
       "no_migration" => attrs["no_migration"] || true,
       "binary_id" => attrs["binary_id"] || false,
       "context_app" => attrs["context_app"] || "",
-      "fields" => attrs["fields"] || [%{"datatype" => "string", "field_name" => "username"}]
+      "fields" => attrs["fields"] || [%{"datatype" => "string", "field_name" => "username"}],
+      # Context Elements
+      "no_merge_with_existing_context" => attrs["no_merge_with_existing_context"] || false,
+      "merge_with_existing_context" => attrs["merge_with_existing_context"] || true,
+      "no_schema" => attrs["no_schema"] || false,
+      "standalone" => attrs["standalone"] || true,
     }
 
     ctx =
@@ -182,18 +162,8 @@ defmodule GenEditor.ElementEditor do
     {:noreply, ctx}
   end
 
-  defp to_updates(_fields, "port", value) do
-    port =
-      case Integer.parse(value) do
-        {n, ""} -> n
-        _ -> nil
-      end
-
-    %{"port" => port}
-  end
-
   defp to_updates(_fields, "type", value) do
-    %{"type" => value, "port" => @default_port_by_type[value]}
+    %{"type" => value}
   end
 
   defp to_updates(fields, "variable", value) do
@@ -205,9 +175,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp to_updates(_fields, field, value), do: %{field => value}
-
-  @default_keys ["type", "variable"]
-
+  @default_keys ["type", "standalone"]
   defp required_attrs_from_type(type) do
     case type do
       "App" ->
@@ -237,18 +205,8 @@ defmodule GenEditor.ElementEditor do
       "Schema" ->
         ~w|module name path|
 
-      "sqlite" ->
-        ~w|database_path|
-
-      "bigquery" ->
-        ~w|project_id default_dataset_id credentials|
-
-      "athena" ->
-        ~w|access_key_id secret_access_key_secret token region workgroup output_location database|
-
-      type when type in ["postgres", "mysql"] ->
-        ~w|hostname port use_ipv6 username password_secret|
-
+      "Context" ->
+        ~w|context|
       _ ->
         ~w||
     end
@@ -283,17 +241,8 @@ defmodule GenEditor.ElementEditor do
       "Schema" ->
         ~w|no_migration table binary_id repo migration_dir prefix context_app|
 
-      "sqlite" ->
-        ~w||
-
-      "bigquery" ->
-        ~w||
-
-      "athena" ->
-        ~w||
-
-      type when type in ["postgres", "mysql"] ->
-        ~w||
+      "Context" ->
+        ~w|no_merge_with_existing_context merge_with_existing_context no_schema|
 
       _ ->
         ~w||
@@ -329,18 +278,8 @@ defmodule GenEditor.ElementEditor do
       "Schema" ->
         ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
 
-      "sqlite" ->
-        ~w|database_path|
-
-      "bigquery" ->
-        ~w|project_id default_dataset_id credentials|
-
-      "athena" ->
-        ~w|access_key_id secret_access_key_secret token region workgroup output_location database|
-
-      type when type in ["postgres", "mysql"] ->
-        ~w|hostname port use_ipv6 username password_secret|
-
+      "Context" ->
+        ~w|context no_merge_with_existing_context merge_with_existing_context no_schema|
       _ ->
         ~w||
     end
@@ -354,20 +293,24 @@ defmodule GenEditor.ElementEditor do
 
   @impl true
   def to_source(attrs) do
+    IO.puts("Original attrs: #{inspect(attrs)}")
     required_keys = required_attrs_from_type(attrs["type"])
 
-    conditional_keys = optional_attrs_from_type(attrs["type"])
+    _conditional_keys = optional_attrs_from_type(attrs["type"])
 
-    if all_fields_filled?(attrs, required_keys) and
-         any_fields_filled?(attrs, conditional_keys) do
+    if all_fields_filled?(attrs, required_keys) do
       attrs |> to_quoted() |> Kino.SmartCell.quoted_to_string()
     else
+      IO.puts("Not all required fields are filled")
       ""
     end
   end
 
   defp all_fields_filled?(attrs, keys) do
-    not Enum.any?(keys, fn key -> attrs[key] in [nil, "", []] end)
+    case keys do
+      [] -> true
+      _ -> Enum.all?(keys, fn key -> attrs[key] not in [nil, "", []] end)
+    end
   end
 
   defp any_fields_filled?(_, []), do: true
@@ -376,188 +319,45 @@ defmodule GenEditor.ElementEditor do
     Enum.any?(keys, fn key -> attrs[key] not in [nil, "", []] end)
   end
 
-  defp to_quoted(%{"type" => "sqlite"} = attrs) do
-    quote do
-      opts = [database: unquote(attrs["database_path"])]
-
-      {:ok, unquote(quoted_var(attrs["variable"]))} = Kino.start_child({Exqlite, opts})
-    end
-  end
-
-  defp to_quoted(%{"type" => "postgres"} = attrs) do
-    quote do
-      opts = unquote(shared_options(attrs))
-
-      {:ok, unquote(quoted_var(attrs["variable"]))} = Kino.start_child({Postgrex, opts})
-    end
-  end
-
-  defp to_quoted(%{"type" => "mysql"} = attrs) do
-    quote do
-      opts = unquote(shared_options(attrs))
-
-      {:ok, unquote(quoted_var(attrs["variable"]))} = Kino.start_child({MyXQL, opts})
-    end
-  end
-
-  defp to_quoted(%{"type" => "bigquery"} = attrs) do
-    goth_opts_block = check_bigquery_credentials(attrs)
-
-    conn_block =
-      quote do
-        {:ok, _pid} = Kino.start_child({Goth, opts})
-
-        unquote(quoted_var(attrs["variable"])) =
-          Req.new(http_errors: :raise)
-          |> ReqBigQuery.attach(
-            goth: ReqBigQuery.Goth,
-            project_id: unquote(attrs["project_id"]),
-            default_dataset_id: unquote(attrs["default_dataset_id"])
-          )
-
-        :ok
-      end
-
-    join_quoted([goth_opts_block, conn_block])
-  end
-
   # TODO: implement to quoted with GenDSL Element map attrs for all elements
-  defp to_quoted(%{"type" => "app"} = attrs) do
-    quote do
-      unquote(quoted_var(attrs["variable"])) =
-        %{
-          access_key_id: unquote(attrs["access_key_id"]),
-          database: unquote(attrs["database"]),
-          output_location: unquote(attrs["output_location"]),
-          region: unquote(attrs["region"]),
-          secret_access_key: unquote(attrs),
-          token: unquote(attrs["token"]),
-          workgroup: unquote(attrs["workgroup"])
-        }
+  defp to_quoted(%{"type" => "App"} = attrs) do
+    attrs =
+      attrs
+      |> Map.filter(fn {_key, val} ->
+        val not in [nil, "", []]
+      end)
 
-      :ok
+    quote do
+      blueprint =
+        %{
+          metadata: [],
+          dependencies: [],
+          pretasks: [],
+          generable_elements: [
+            unquote(attrs)
+          ],
+          posttasks: []
+        }
     end
   end
 
-  defp to_quoted(%{"type" => "athena"} = attrs) do
-    quote do
-      unquote(quoted_var(attrs["variable"])) =
-        Req.new(http_errors: :raise)
-        |> ReqAthena.attach(
-          access_key_id: unquote(attrs["access_key_id"]),
-          database: unquote(attrs["database"]),
-          output_location: unquote(attrs["output_location"]),
-          region: unquote(attrs["region"]),
-          secret_access_key: unquote(quoted_access_key(attrs)),
-          token: unquote(attrs["token"]),
-          workgroup: unquote(attrs["workgroup"])
-        )
-
-      :ok
-    end
-  end
-
-  defp to_quoted(%{"type" => "html"} = attrs) do
-    IO.puts("HTML Element not implemented yet")
+  defp to_quoted(%{"type" => type} = attrs) when type in @generable_elements do
+    attrs =
+      attrs
+      |> Map.filter(fn {_key, val} ->
+        val not in [nil, "", []]
+      end)
 
     quote do
-      unquote(quoted_var(attrs["variable"])) =
-        %{
-          context: unquote(attrs["context"]),
-          schema: unquote(attrs["schema"]),
-          web: unquote(attrs["web"]),
-          context_app: unquote(attrs["context_app"]),
-          no_schema: unquote(attrs["no_schema"]),
-          no_context: unquote(attrs["no_context"])
-        }
-
-      :ok
+      unquote(attrs)
     end
   end
 
   defp to_quoted(attr) do
+    IO.puts("to_quoted everything else: #{inspect(attr)}")
+
     quote do
       :ok
-    end
-  end
-
-  defp quoted_access_key(%{"secret_access_key" => password}), do: password
-
-  defp quoted_access_key(%{"secret_access_key_secret" => ""}), do: ""
-
-  defp quoted_access_key(%{"secret_access_key_secret" => secret}) do
-    quote do
-      System.fetch_env!(unquote("LB_#{secret}"))
-    end
-  end
-
-  defp check_bigquery_credentials(attrs) do
-    case attrs["credentials"] do
-      %{"type" => "service_account"} ->
-        quote do
-          credentials = unquote(Macro.escape(attrs["credentials"]))
-
-          opts = [
-            name: ReqBigQuery.Goth,
-            http_client: &Req.request/1,
-            source: {:service_account, credentials}
-          ]
-        end
-
-      %{"type" => "authorized_user"} ->
-        quote do
-          credentials = unquote(Macro.escape(attrs["credentials"]))
-
-          opts = [
-            name: ReqBigQuery.Goth,
-            http_client: &Req.request/1,
-            source: {:refresh_token, credentials}
-          ]
-        end
-
-      _empty_map ->
-        quote do
-          opts = [name: ReqBigQuery.Goth, http_client: &Req.request/1]
-        end
-    end
-  end
-
-  defp shared_options(attrs) do
-    opts = [
-      hostname: attrs["hostname"],
-      port: attrs["port"],
-      username: attrs["username"],
-      password: quoted_pass(attrs),
-      database: attrs["database"]
-    ]
-
-    if attrs["use_ipv6"] do
-      opts ++ [socket_options: [:inet6]]
-    else
-      opts ++ []
-    end
-  end
-
-  defp quoted_var(string), do: {String.to_atom(string), [], nil}
-
-  defp quoted_pass(%{"password" => password}), do: password
-
-  defp quoted_pass(%{"password_secret" => ""}), do: ""
-
-  defp quoted_pass(%{"password_secret" => secret}) do
-    quote do
-      System.fetch_env!(unquote("LB_#{secret}"))
-    end
-  end
-
-  defp default_db_type() do
-    cond do
-      Code.ensure_loaded?(Postgrex) -> "postgres"
-      Code.ensure_loaded?(MyXQL) -> "mysql"
-      Code.ensure_loaded?(Exqlite) -> "sqlite"
-      Code.ensure_loaded?(ReqBigQuery) -> "bigquery"
-      Code.ensure_loaded?(ReqAthena) -> "athena"
-      true -> "postgres"
     end
   end
 
@@ -609,12 +409,6 @@ defmodule GenEditor.ElementEditor do
   defp help_box(%{"type" => "bigquery"}) do
     if Code.ensure_loaded?(Mint.HTTP) do
       ~s|You must upload your Google BigQuery Credentials (<a href="https://cloud.google.com/iam/docs/creating-managing-service-account-keys" target="_blank">find them here</a>) or authenticate your machine with <strong>gcloud</strong> CLI authentication.|
-    end
-  end
-
-  defp help_box(%{"type" => "athena"}) do
-    if Code.ensure_loaded?(:aws_credentials) do
-      "You must fill in the fields above accordingly or authenticate your machine with AWS CLI authentication."
     end
   end
 
