@@ -116,7 +116,7 @@ defmodule GenEditor.ElementEditor do
       "no_merge_with_existing_context" => attrs["no_merge_with_existing_context"] || false,
       "merge_with_existing_context" => attrs["merge_with_existing_context"] || true,
       "no_schema" => attrs["no_schema"] || false,
-      "standalone" => attrs["standalone"] || true
+      "standalone" => attrs["standalone"]
     }
 
     ctx =
@@ -264,7 +264,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp to_updates(_fields, field, value), do: %{field => value}
-  @default_keys ["type", "standalone"]
+  @default_keys ["type"]
   defp required_attrs_from_type(type) do
     case type do
       "App" ->
@@ -274,7 +274,7 @@ defmodule GenEditor.ElementEditor do
         ~w|context|
 
       "Auth" ->
-        ~w|context |
+        ~w|context|
 
       "Notifier" ->
         ~w|context notifier_name message_name_list|
@@ -369,7 +369,7 @@ defmodule GenEditor.ElementEditor do
         ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
 
       "Context" ->
-        ~w|context no_merge_with_existing_context merge_with_existing_context no_schema|
+        ~w|context no_merge_with_existing_context merge_with_existing_context no_schema standalone|
 
       _ ->
         ~w||
@@ -456,7 +456,7 @@ defmodule GenEditor.ElementEditor do
 
   defp to_quoted(%{"type" => type, "standalone" => false} = attrs)
        when type in @generable_elements do
-    # IO.puts("DEPENDENCY DETECTED: #{inspect(attrs)}")
+    IO.puts("DEPENDENCY DETECTED: #{inspect(attrs)}")
 
     attrs =
       attrs
@@ -487,7 +487,7 @@ defmodule GenEditor.ElementEditor do
     end
   end
 
-  defp to_quoted(attr) do
+  defp to_quoted(_attr) do
     # IO.puts("to_quoted everything else: #{inspect(attr)}")
 
     quote do
