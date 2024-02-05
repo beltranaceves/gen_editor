@@ -12,7 +12,7 @@ defmodule GenEditor.ElementEditor do
     # Append map to attrs, so that access is uniform
 
     deps = %{
-      "context_list" => attrs["context_list"] || [],
+      "context_list" => get_context_list(ctx),
       "schema_list" => attrs["schema_list"] || [],
       "web_list" => attrs["web_list"] || [],
       "context_apps_list" => attrs["context_apps_list"] || [],
@@ -57,30 +57,30 @@ defmodule GenEditor.ElementEditor do
       "app" => attrs["app"] || "",
       "module" => attrs["module"] || "",
       "database" => attrs["database"] || "",
-      "no_assets" => attrs["no_assets"] || "",
-      "no_esbuild" => attrs["no_esbuild"] || "",
-      "no_tailwind" => attrs["no_tailwind"] || "",
-      "no_ecto" => attrs["no_ecto"] || "",
-      "no_gettext" => attrs["no_gettext"] || "",
-      "no_html" => attrs["no_html"] || "",
-      "no_dashboard" => attrs["no_dashboard"] || "",
-      "no_live" => attrs["no_live"] || "",
-      "no_mailer" => attrs["no_mailer"] || "",
-      "verbose" => attrs["verbose"] || "",
-      "version" => attrs["version"] || "",
-      "install" => attrs["install"] || "",
+      "no_assets" => attrs["no_assets"] || false,
+      "no_esbuild" => attrs["no_esbuild"] || false,
+      "no_tailwind" => attrs["no_tailwind"] || false,
+      "no_ecto" => attrs["no_ecto"] || false,
+      "no_gettext" => attrs["no_gettext"] || false,
+      "no_html" => attrs["no_html"] || false,
+      "no_dashboard" => attrs["no_dashboard"] || false,
+      "no_live" => attrs["no_live"] || false,
+      "no_mailer" => attrs["no_mailer"] || false,
+      "verbose" => attrs["verbose"] || false,
+      "version" => attrs["version"] || false,
+      "install" => attrs["install"] || true,
       "no_install" => attrs["no_install"] || false,
-      "binary_id" => attrs["binary_id"] || "",
+      "binary_id" => attrs["binary_id"] || false,
       # HTML Element
       "context" => attrs["context"] || "",
       "schema" => attrs["schema"] || "",
       "web" => attrs["web"] || "",
       "context_app" => attrs["context_app"] || "",
-      "no_schema" => attrs["no_schema"] || true,
-      "no_context" => attrs["no_context"] || true,
-      # Notifier Element
+      "no_schema" => attrs["no_schema"] || false,
+      "no_context" => attrs["no_context"] || false,
+      # Notifier Element standalone
       "notifier_name" => attrs["notifier_name"] || "",
-      "message_name_list" => attrs["message_name_list"] || [""],
+      "message_name_list" => attrs["message_name_list"] || [%{"message_name" => "welcome"}],
       # Auth Element
       "context" => attrs["context"] || "",
       "schema" => attrs["schema"] || "",
@@ -150,6 +150,11 @@ defmodule GenEditor.ElementEditor do
     updated_fields = to_updates(ctx.assigns.fields, field, value)
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
 
+    updated_deps = %{} |> Map.put("deps",
+      (ctx.assigns.fields["deps"]) |> Map.merge(update_deps(ctx)))
+
+    ctx = update(ctx, :fields, &Map.merge(&1, updated_deps))
+
     missing_dep = missing_dep(ctx.assigns.fields)
 
     ctx =
@@ -174,6 +179,87 @@ defmodule GenEditor.ElementEditor do
       %{"variable" => value}
     else
       %{"variable" => fields["variable"]}
+    end
+  end
+
+  def update_deps(ctx) do
+    %{
+      "context_list" => get_context_list(ctx),
+      "schema_list" => get_schema_list(ctx.assigns.fields),
+      "web_list" => get_web_list(ctx.assigns.fields),
+      "context_apps_list" => get_context_apps_list(ctx.assigns.fields),
+      "module_list" => get_module_list(ctx.assigns.fields)
+    }
+  end
+
+  def get_context_list(ctx) do
+    # IO.puts("GET CONTEXT LIST: #{inspect(ctx)}")
+    case ctx do
+      %{} ->
+        []
+
+      context ->
+        context
+        |> Map.fetch!(:blueprint)
+        |> Map.fetch!(:metadata)
+        |> Enum.filter(fn element -> element["type"] == "Context" end)
+        |> Enum.map(fn element -> %{label: element["context"], value: element["context"] } end)
+    end
+  end
+
+  def get_schema_list(ctx) do
+    case ctx do
+      %{} ->
+        []
+
+      context ->
+        context
+        |> Map.fetch!(:blueprint)
+        |> Map.fetch!(:metadata)
+        |> Enum.filter(fn element -> element["type"] == "Schema" end)
+        |> Enum.map(fn element -> %{label: element["name"], value: element["name"] } end)
+    end
+  end
+
+  def get_web_list(ctx) do
+    case ctx do
+      %{} ->
+        []
+
+      context ->
+        context
+        |> Map.fetch!(:blueprint)
+        |> Map.fetch!(:metadata)
+        |> Enum.filter(fn element -> element["type"] == "Web" end)
+        |> Enum.map(fn element -> %{label: element["name"], value: element["name"] } end)
+    end
+  end
+
+  def get_context_apps_list(ctx) do
+    case ctx do
+      %{} ->
+        []
+
+      context ->
+        context
+        |> Map.fetch!(:blueprint)
+        |> Map.fetch!(:metadata)
+        |> Enum.filter(fn element -> element["type"] == "ContextApp" end)
+        |> Enum.map(fn element -> %{label: element["context_app"], value: element["context_app"] } end)
+    end
+  end
+
+  def get_module_list(ctx) do
+    case ctx do
+      %{} ->
+        []
+
+      context ->
+        context
+        |> Map.fetch!(:blueprint)
+        |> Map.fetch!(:metadata)
+        |> Enum.filter(fn element -> element["type"] == "Module" end)
+        |> Enum.map(fn element -> %{label: element["module"], value: element["module"] } end)
     end
   end
 
@@ -209,7 +295,7 @@ defmodule GenEditor.ElementEditor do
         ~w|module name path|
 
       "Context" ->
-        ~w|context|
+        ~w|context standalone|
 
       _ ->
         ~w||
@@ -303,13 +389,13 @@ defmodule GenEditor.ElementEditor do
 
   @impl true
   def to_attrs(ctx) do
-    IO.puts("to_attrs NO MATCH: #{inspect(ctx)}")
+    # IO.puts("to_attrs NO MATCH: #{inspect(ctx)}")
     ctx
   end
 
   @impl true
   def to_source(attrs) do
-    IO.puts("Original attrs: #{inspect(attrs)}")
+    # IO.puts("Original attrs: #{inspect(attrs)}")
 
     case attrs |> Map.fetch("type") do
       {:ok, type} ->
@@ -327,7 +413,7 @@ defmodule GenEditor.ElementEditor do
         end
 
       _ ->
-        IO.puts("No type found")
+        # IO.puts("No type found")
         ""
     end
   end
@@ -370,7 +456,7 @@ defmodule GenEditor.ElementEditor do
 
   defp to_quoted(%{"type" => type, "standalone" => false} = attrs)
        when type in @generable_elements do
-    IO.puts("DEPENDENCY DETECTED: #{inspect(attrs)}")
+    # IO.puts("DEPENDENCY DETECTED: #{inspect(attrs)}")
 
     attrs =
       attrs
@@ -402,7 +488,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp to_quoted(attr) do
-    IO.puts("to_quoted everything else: #{inspect(attr)}")
+    # IO.puts("to_quoted everything else: #{inspect(attr)}")
 
     quote do
       :ok
@@ -417,7 +503,7 @@ defmodule GenEditor.ElementEditor do
 
   @impl true
   def handle_info({:scan_binding_result, binding, _env}, ctx) do
-    IO.puts("Scanning binding result: #{inspect(binding)}")
+    # IO.puts("Scanning binding result: #{inspect(binding)}")
 
     ctx =
       case List.keyfind(binding, :blueprint, 0) do
