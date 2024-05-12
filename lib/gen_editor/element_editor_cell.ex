@@ -4,6 +4,8 @@ defmodule GenEditor.ElementEditor do
   use Kino.SmartCell, name: "Generable Element"
 
   @generable_elements ~w|App Html Auth Notifier Cert Channel Presence Secret Schema Context|
+  @generable_elements_dependent ~w|Module Web ContextApp Schema Context|
+  @generable_elements_dependency ~w|Auth Context Embedded Html Json Live|
 
   @impl true
   def init(attrs, ctx) do
@@ -203,18 +205,16 @@ defmodule GenEditor.ElementEditor do
     # IO.puts("updating deps: #{inspect(ctx)}")
     %{
       "context_list" => get_context_list(ctx),
-      "schema_list" => get_schema_list(ctx.assigns.fields),
-      "web_list" => get_web_list(ctx.assigns.fields),
-      "context_apps_list" => get_context_apps_list(ctx.assigns.fields),
-      "module_list" => get_module_list(ctx.assigns.fields)
+      "schema_list" => get_schema_list(ctx),
+      "web_list" => get_web_list(ctx),
+      "context_apps_list" => get_context_apps_list(ctx),
+      "module_list" => get_module_list(ctx)
     }
   end
 
   def get_context_list(ctx) do
-    # IO.puts("GET CONTEXT LIST: #{inspect(ctx)}")
     case ctx do
       context ->
-        IO.puts("CONTEXT: #{inspect(context)}")
         case context.assigns |> Map.fetch(:blueprint) do
           {:ok, blueprint} ->
             case blueprint |> Map.fetch(:metadata) do
@@ -233,57 +233,87 @@ defmodule GenEditor.ElementEditor do
 
   def get_schema_list(ctx) do
     case ctx do
-      %{} ->
-        []
-
       context ->
-        context.assigns
-        |> Map.fetch!(:blueprint)
-        |> Map.fetch!(:metadata)
-        |> Enum.filter(fn element -> element["type"] == "Schema" end)
-        |> Enum.map(fn element -> %{label: element["name"], value: element["name"] } end)
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "Schema" end)
+                |> Enum.map(fn element -> %{label: element["name"], value: element["name"]} end)
+              _ ->
+                []
+            end
+          _ ->
+            []
+        end
     end
   end
 
   def get_web_list(ctx) do
     case ctx do
-      %{} ->
-        []
-
       context ->
-        context
-        |> Map.fetch!(:blueprint)
-        |> Map.fetch!(:metadata)
-        |> Enum.filter(fn element -> element["type"] == "Web" end)
-        |> Enum.map(fn element -> %{label: element["name"], value: element["name"] } end)
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "Web" end)
+                |> Enum.map(fn element -> %{label: element["name"], value: element["name"] } end)
+              _ ->
+                []
+            end
+          _ ->
+            []
+        end
     end
   end
 
   def get_context_apps_list(ctx) do
     case ctx do
-      %{} ->
-        []
-
       context ->
-        context
-        |> Map.fetch!(:blueprint)
-        |> Map.fetch!(:metadata)
-        |> Enum.filter(fn element -> element["type"] == "ContextApp" end)
-        |> Enum.map(fn element -> %{label: element["context_app"], value: element["context_app"] } end)
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "ContextApp" end)
+                |> Enum.map(fn element -> %{label: element["context_app"], value: element["context_app"] } end)
+              _ ->
+                []
+            end
+          _ ->
+            []
+        end
     end
   end
 
   def get_module_list(ctx) do
     case ctx do
-      %{} ->
-        []
-
       context ->
-        context
-        |> Map.fetch!(:blueprint)
-        |> Map.fetch!(:metadata)
-        |> Enum.filter(fn element -> element["type"] == "Module" end)
-        |> Enum.map(fn element -> %{label: element["module"], value: element["module"] } end)
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                modules = metadata
+                |> Enum.filter(fn element -> element["type"] == "Module" end)
+                |> Enum.map(fn element -> %{label: element["module"], value: element["module"] } end)
+
+                case blueprint |> Map.fetch(:generable_elements) do
+                  {:ok, generable_elements} ->
+                    generable_elements
+                    |> Enum.filter(fn element -> element["type"] == "App" and Map.has_key?(element, "module") end)
+                    |> Enum.map(fn element -> %{label: element["module"], value: element["module"] } end)
+                    |> Enum.concat(modules)
+                  _ ->
+                    modules
+                end
+              _ ->
+                []
+            end
+          _ ->
+            []
+        end
     end
   end
 
@@ -316,10 +346,16 @@ defmodule GenEditor.ElementEditor do
         ~w||
 
       "Schema" ->
-        ~w|module name path|
+        ~w|module name standalone|
 
       "Context" ->
         ~w|context standalone|
+
+      "Module" ->
+        ~w|module standalone|
+
+      "Blueprint" ->
+        ~w||
 
       _ ->
         ~w||
@@ -356,7 +392,13 @@ defmodule GenEditor.ElementEditor do
         ~w|no_migration table binary_id repo migration_dir prefix context_app|
 
       "Context" ->
-        ~w|no_merge_with_existing_context merge_with_existing_context no_schema|
+        ~w|no_merge_with_existing_context merge_with_existing_context no_schema schema|
+
+      "Module" ->
+        ~w||
+
+      "Blueprint" ->
+        ~w||
 
       _ ->
         ~w||
@@ -390,10 +432,16 @@ defmodule GenEditor.ElementEditor do
         ~w|length|
 
       "Schema" ->
-        ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields|
+        ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields standalone|
 
       "Context" ->
-        ~w|context no_merge_with_existing_context merge_with_existing_context no_schema standalone|
+        ~w|context no_merge_with_existing_context merge_with_existing_context no_schema schema standalone|
+
+      "Module" ->
+        ~w|module standalone|
+
+      "Blueprint" ->
+        ~w||
 
       _ ->
         ~w||
@@ -478,9 +526,48 @@ defmodule GenEditor.ElementEditor do
     end
   end
 
+  defp to_quoted(%{"type" => "Blueprint"} = attrs) do
+    # attrs =
+    #   attrs
+    #   |> Map.filter(fn {_key, val} ->
+    #     val not in [nil, "", []]
+    #   end)
+
+    IO.puts("Blueprint attrs: #{inspect(attrs)}")
+    quote do
+      schemas = blueprint |> Map.fetch!(:metadata) |> Enum.filter(fn element -> element["type"] == "Schema" end)
+      generable_elements = blueprint |> Map.fetch!(:generable_elements)
+      generable_elements = generable_elements
+      |> Enum.map(fn element ->
+        case Enum.member?(unquote(@generable_elements_dependency), element["type"]) do
+          true ->
+            schema = schemas |> Enum.filter(fn schema ->
+              IO.puts("SEARCHING FOR SCHEMA: #{inspect(schema)}")
+              IO.puts("WITH ELEMENT: #{inspect(element)}")
+              schema["name"] == element["schema"]
+            end)
+
+            element |> Map.put("schema", schema)
+          false ->
+            element
+        end
+      end)
+      blueprint =
+        blueprint
+        |> Map.put(:generable_elements, generable_elements)
+
+      Kino.Download.new(
+        fn -> Jason.encode!(blueprint) end,
+        filename: "blueprint.json",
+        label: "Json file"
+      )
+      # {:ok, "Generated Blueprint"}
+    end
+  end
+
   defp to_quoted(%{"type" => type, "standalone" => false} = attrs)
-       when type in @generable_elements do
-    IO.puts("DEPENDENCY DETECTED: #{inspect(attrs)}")
+       when type in @generable_elements_dependent do
+    # IO.puts("DEPENDENCY DETECTED: #{inspect(attrs)}")
 
     attrs =
       attrs
