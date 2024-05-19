@@ -5,8 +5,8 @@ defmodule GenEditor.MixProject do
     [
       app: :gen_editor,
       description: "Kino smart cells for Phoenix's phx.gen commands",
-      version: "0.1.0",
-      elixir: "~> 1.14",
+      version: "0.1.4",
+      elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       source_url: "https://github.com/beltranaceves/gen_editor",
@@ -37,8 +37,10 @@ defmodule GenEditor.MixProject do
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
       {:kino, "~> 0.12.3"},
       {:uuid, "~> 1.1.8"},
-      {:gen_cli, path: "../gen_cli", only: :dev},
-      {:gen_dsl, path: "../gen_dsl", only: :dev}
+      # {:gen_cli, path: "../gen_cli", only: :dev},
+      # {:gen_dsl, path: "../gen_dsl", only: :dev}
+      {:gen_dsl, "~> 0.2.2"},
+      {:gen_cli, "~> 0.1.2"}
       # {:jason, "~> 1.4"},
       # TODO: change this to download from hex.pm
     ]

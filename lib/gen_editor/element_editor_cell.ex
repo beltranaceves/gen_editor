@@ -152,6 +152,13 @@ defmodule GenEditor.ElementEditor do
   end
 
   @impl true
+  def handle_event("generate_blueprint", _params, ctx) do
+    # TODO: implement to generate blueprint
+    broadcast_event(ctx, "generate_blueprint", %{})
+    {:noreply, ctx}
+  end
+
+  @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     # value = case field do
     #   "standalone" ->
@@ -555,6 +562,8 @@ defmodule GenEditor.ElementEditor do
       blueprint =
         blueprint
         |> Map.put(:generable_elements, generable_elements)
+
+      GenDSL.generate_from_blueprint(blueprint)
 
       Kino.Download.new(
         fn -> Jason.encode!(blueprint) end,
