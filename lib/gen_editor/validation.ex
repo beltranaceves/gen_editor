@@ -1,12 +1,9 @@
 defmodule GenEditor.Validation do
 
-  def check_module_name_validity!(name) do
-    unless inspect(name) =~ Regex.recompile!(~r/^[A-Z]\w*(\.[A-Z]\w*)*$/) do
-      Mix.raise(
-        "Module name must be a valid Elixir alias (for example: Foo.Bar), got: #{inspect(name)}"
-      )
-    end
+  def is_module_valid(name) do
+    name |> String.match?(~r/^[A-Z]\w*(\.[A-Z]\w*)*$/)
   end
+
   def check_app_name!(name, from_app_flag) do
     unless name =~ Regex.recompile!(~r/^[a-z][\w_]*$/) do
       extra =
