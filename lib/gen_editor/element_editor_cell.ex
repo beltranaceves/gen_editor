@@ -542,8 +542,8 @@ defmodule GenEditor.ElementEditor do
 
     IO.puts("Blueprint attrs: #{inspect(attrs)}")
     quote do
-      schemas = blueprint |> Map.fetch!(:metadata) |> enum.filter(fn element -> element["type"] == "schema" end)
-      app = blueprint |> Map.fetch!(:generable_elements) |> enum.filter(fn element -> element["type"] == "app" end) |> Enum.take(1)
+      schemas = blueprint |> Map.fetch!(:metadata) |> Enum.filter(fn element -> element["type"] == "schema" end)
+      app = blueprint |> Map.fetch!(:generable_elements) |> Enum.filter(fn element -> element["type"] == "app" end) |> Enum.take(1)
       generable_elements = blueprint |> Map.fetch!(:generable_elements)
       generable_elements = generable_elements
       |> Enum.map(fn element ->

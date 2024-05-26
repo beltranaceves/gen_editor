@@ -5,7 +5,7 @@ defmodule GenEditor.MixProject do
     [
       app: :gen_editor,
       description: "Kino smart cells for Phoenix's phx.gen commands",
-      version: "0.1.8",
+      version: "0.1.10",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
