@@ -542,7 +542,8 @@ defmodule GenEditor.ElementEditor do
 
     IO.puts("Blueprint attrs: #{inspect(attrs)}")
     quote do
-      schemas = blueprint |> Map.fetch!(:metadata) |> Enum.filter(fn element -> element["type"] == "Schema" end)
+      schemas = blueprint |> Map.fetch!(:metadata) |> enum.filter(fn element -> element["type"] == "schema" end)
+      app = blueprint |> Map.fetch!(:generable_elements) |> enum.filter(fn element -> element["type"] == "app" end) |> Enum.take(1)
       generable_elements = blueprint |> Map.fetch!(:generable_elements)
       generable_elements = generable_elements
       |> Enum.map(fn element ->
@@ -562,6 +563,7 @@ defmodule GenEditor.ElementEditor do
       blueprint =
         blueprint
         |> Map.put(:generable_elements, generable_elements)
+        |> Map.put(:app, app)
 
       GenDSL.generate_from_blueprint(blueprint)
 
@@ -570,7 +572,18 @@ defmodule GenEditor.ElementEditor do
         filename: "blueprint.json",
         label: "Json file"
       )
-      # {:ok, "Generated Blueprint"}
+
+      IO.puts("Compressing project...")
+
+      files = File.ls!(app["path"]) |> Enum.map(&String.to_charlist/1)
+
+      {:ok, {filename, bytes}} = :zip.create("project.zip", files, [:memory])
+
+      Kino.Download.new(
+        fn -> bytes end,
+        filename: "project.zip",
+        label: "Zip file"
+      )
     end
   end
 
