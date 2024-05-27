@@ -82,7 +82,7 @@ defmodule GenEditor.ElementEditor do
       "no_schema" => attrs["no_schema"] || false,
       "no_context" => attrs["no_context"] || false,
       # Notifier Element standalone
-      "message_name_list" => attrs["message_name_list"] || [%{"message_name" => "welcome"}],
+      "message_names" => attrs["message_names"] || [%{"message_name" => "welcome"}],
       # Auth Element
       "context" => attrs["context"] || "",
       "schema" => attrs["schema"] || "",
@@ -361,7 +361,7 @@ defmodule GenEditor.ElementEditor do
         ~w|context|
 
       "Notifier" ->
-        ~w|context module message_name_list|
+        ~w|context module message_names|
 
       "Cert" ->
         ~w||
@@ -447,7 +447,7 @@ defmodule GenEditor.ElementEditor do
         ~w|context schema web hashing_libe live no_live|
 
       "Notifier" ->
-        ~w|module message_name_list context context_app|
+        ~w|module message_names context context_app|
 
       "Cert" ->
         ~w|app domain url output_path cert_name|
