@@ -119,10 +119,11 @@ defmodule GenEditor.ElementEditor do
       "no_merge_with_existing_context" => attrs["no_merge_with_existing_context"] || false,
       "merge_with_existing_context" => attrs["merge_with_existing_context"] || true,
       "no_schema" => attrs["no_schema"] || false,
-      "standalone" => case attrs["standalone"] do
-        nil -> false
-        _ -> attrs["standalone"]
-      end
+      "standalone" =>
+        case attrs["standalone"] do
+          nil -> false
+          _ -> attrs["standalone"]
+        end
     }
 
     ctx =
@@ -172,13 +173,14 @@ defmodule GenEditor.ElementEditor do
     updated_fields = to_updates(ctx.assigns.fields, field, value)
     ctx = update(ctx, :fields, &Map.merge(&1, updated_fields))
 
-    updated_deps = %{} |> Map.put("deps",
-      (ctx.assigns.fields["deps"]) |> Map.merge(update_deps(ctx)))
-
+    updated_deps =
+      %{}
+      |> Map.put(
+        "deps",
+        ctx.assigns.fields["deps"] |> Map.merge(update_deps(ctx))
+      )
 
     ctx = update(ctx, :fields, &Map.merge(&1, updated_deps))
-
-
 
     {:noreply, ctx}
     missing_dep = missing_dep(ctx.assigns.fields)
@@ -228,10 +230,14 @@ defmodule GenEditor.ElementEditor do
               {:ok, metadata} ->
                 metadata
                 |> Enum.filter(fn element -> element["type"] == "Context" end)
-                |> Enum.map(fn element -> %{label: element["context"], value: element["context"] } end)
+                |> Enum.map(fn element ->
+                  %{label: element["context"], value: element["context"]}
+                end)
+
               _ ->
                 []
             end
+
           _ ->
             []
         end
@@ -248,9 +254,11 @@ defmodule GenEditor.ElementEditor do
                 metadata
                 |> Enum.filter(fn element -> element["type"] == "Schema" end)
                 |> Enum.map(fn element -> %{label: element["name"], value: element["name"]} end)
+
               _ ->
                 []
             end
+
           _ ->
             []
         end
@@ -266,10 +274,12 @@ defmodule GenEditor.ElementEditor do
               {:ok, metadata} ->
                 metadata
                 |> Enum.filter(fn element -> element["type"] == "Web" end)
-                |> Enum.map(fn element -> %{label: element["name"], value: element["name"] } end)
+                |> Enum.map(fn element -> %{label: element["name"], value: element["name"]} end)
+
               _ ->
                 []
             end
+
           _ ->
             []
         end
@@ -285,10 +295,14 @@ defmodule GenEditor.ElementEditor do
               {:ok, metadata} ->
                 metadata
                 |> Enum.filter(fn element -> element["type"] == "ContextApp" end)
-                |> Enum.map(fn element -> %{label: element["context_app"], value: element["context_app"] } end)
+                |> Enum.map(fn element ->
+                  %{label: element["context_app"], value: element["context_app"]}
+                end)
+
               _ ->
                 []
             end
+
           _ ->
             []
         end
@@ -302,22 +316,32 @@ defmodule GenEditor.ElementEditor do
           {:ok, blueprint} ->
             case blueprint |> Map.fetch(:metadata) do
               {:ok, metadata} ->
-                modules = metadata
-                |> Enum.filter(fn element -> element["type"] == "Module" end)
-                |> Enum.map(fn element -> %{label: element["module"], value: element["module"] } end)
+                modules =
+                  metadata
+                  |> Enum.filter(fn element -> element["type"] == "Module" end)
+                  |> Enum.map(fn element ->
+                    %{label: element["module"], value: element["module"]}
+                  end)
 
                 case blueprint |> Map.fetch(:generable_elements) do
                   {:ok, generable_elements} ->
                     generable_elements
-                    |> Enum.filter(fn element -> element["type"] == "App" and Map.has_key?(element, "module") end)
-                    |> Enum.map(fn element -> %{label: element["module"], value: element["module"] } end)
+                    |> Enum.filter(fn element ->
+                      element["type"] == "App" and Map.has_key?(element, "module")
+                    end)
+                    |> Enum.map(fn element ->
+                      %{label: element["module"], value: element["module"]}
+                    end)
                     |> Enum.concat(modules)
+
                   _ ->
                     modules
                 end
+
               _ ->
                 []
             end
+
           _ ->
             []
         end
@@ -529,6 +553,7 @@ defmodule GenEditor.ElementEditor do
           ],
           posttasks: []
         }
+
       {:ok, "Added: App"}
     end
   end
@@ -541,26 +566,44 @@ defmodule GenEditor.ElementEditor do
     #   end)
 
     IO.puts("Blueprint attrs: #{inspect(attrs)}")
-    quote do
-      schemas = blueprint |> Map.fetch!(:metadata) |> Enum.filter(fn element -> element["type"] == "schema" end)
-      app = blueprint |> Map.fetch!(:generable_elements) |> Enum.filter(fn element -> element["type"] == "app" end) |> Enum.at(0)
-      generable_elements = blueprint |> Map.fetch!(:generable_elements)
-      generable_elements = generable_elements |> Enum.filter(fn element -> element["type"] == "" end) # Drops duplicated app elements, revemove for multi-app support.
-      generable_elements = generable_elements
-      |> Enum.map(fn element ->
-        case Enum.member?(unquote(@generable_elements_dependency), element["type"]) do
-          true ->
-            schema = schemas |> Enum.filter(fn schema ->
-              IO.puts("SEARCHING FOR SCHEMA: #{inspect(schema)}")
-              IO.puts("WITH ELEMENT: #{inspect(element)}")
-              schema["name"] == element["schema"]
-            end)
 
-            element |> Map.put("schema", schema)
-          false ->
-            element
-        end
-      end)
+    quote do
+      schemas =
+        blueprint
+        |> Map.fetch!(:metadata)
+        |> Enum.filter(fn element -> element["type"] == "schema" end)
+
+      app =
+        blueprint
+        |> Map.fetch!(:generable_elements)
+        |> Enum.filter(fn element -> element["type"] == "App" end)
+        |> Enum.at(0)
+
+      generable_elements = blueprint |> Map.fetch!(:generable_elements)
+      # Drops duplicated app elements, revemove for multi-app support.
+      generable_elements =
+        generable_elements |> Enum.filter(fn element -> element["type"] != "App" end)
+
+      generable_elements =
+        generable_elements
+        |> Enum.map(fn element ->
+          case Enum.member?(unquote(@generable_elements_dependency), element["type"]) do
+            true ->
+              schema =
+                schemas
+                |> Enum.filter(fn schema ->
+                  IO.puts("SEARCHING FOR SCHEMA: #{inspect(schema)}")
+                  IO.puts("WITH ELEMENT: #{inspect(element)}")
+                  schema["name"] == element["schema"]
+                end)
+
+              element |> Map.put("schema", schema)
+
+            false ->
+              element
+          end
+        end)
+
       blueprint =
         blueprint
         |> Map.put(:generable_elements, generable_elements)
@@ -576,14 +619,26 @@ defmodule GenEditor.ElementEditor do
 
       IO.puts("Compressing project...")
 
-      files = File.ls!(app["path"]) |> Enum.map(&String.to_charlist/1)
+      files = File.ls!("./" <> app["path"]) |> Enum.map(&String.to_charlist/1)
 
-      {:ok, {filename, bytes}} = :zip.create("project.zip", files, [:memory])
+      case :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]]) do
+        {:ok, {filename, bytes}} -> {:ok, {filename, bytes}}
+        {:error, reason} -> {:error, reason}
+      end
 
-      Kino.Download.new(
-        fn -> bytes end,
-        filename: "project.zip",
-        label: "Zip file"
+      Kino.Layout.grid(
+        [
+          Kino.Download.new(fn -> Jason.encode!(blueprint) end,
+            filename: "blueprint.json",
+            label: "Blueprint.json"
+          ),
+          Kino.Download.new(fn -> bytes end,
+            filename: "project.zip",
+            label: "Project.zip"
+          )
+        ],
+        columns: 2,
+        boxed: true
       )
     end
   end
@@ -602,6 +657,7 @@ defmodule GenEditor.ElementEditor do
       blueprint =
         blueprint
         |> Map.update!(:metadata, &(&1 ++ [unquote(attrs)]))
+
       {:ok, "Added: " <> unquote(attrs["type"])}
     end
   end
@@ -617,6 +673,7 @@ defmodule GenEditor.ElementEditor do
       blueprint =
         blueprint
         |> Map.update!(:generable_elements, &(&1 ++ [unquote(attrs)]))
+
       {:ok, "Added: " <> unquote(attrs["type"])}
     end
   end
