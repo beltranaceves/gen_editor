@@ -82,7 +82,6 @@ defmodule GenEditor.ElementEditor do
       "no_schema" => attrs["no_schema"] || false,
       "no_context" => attrs["no_context"] || false,
       # Notifier Element standalone
-      "notifier_name" => attrs["notifier_name"] || "",
       "message_name_list" => attrs["message_name_list"] || [%{"message_name" => "welcome"}],
       # Auth Element
       "context" => attrs["context"] || "",
@@ -362,7 +361,7 @@ defmodule GenEditor.ElementEditor do
         ~w|context|
 
       "Notifier" ->
-        ~w|context notifier_name message_name_list|
+        ~w|context module message_name_list|
 
       "Cert" ->
         ~w||
@@ -448,7 +447,7 @@ defmodule GenEditor.ElementEditor do
         ~w|context schema web hashing_libe live no_live|
 
       "Notifier" ->
-        ~w|notifier_name message_name_list context context_app|
+        ~w|module message_name_list context context_app|
 
       "Cert" ->
         ~w|app domain url output_path cert_name|
@@ -580,6 +579,11 @@ defmodule GenEditor.ElementEditor do
         |> Enum.at(0)
 
       generable_elements = blueprint |> Map.fetch!(:generable_elements)
+      generable_elements = generable_elements |> Enum.map(
+        fn element ->
+          element = element |> Map.put("path", app["path"])
+        end
+      )
       # Drops duplicated app elements, revemove for multi-app support.
       generable_elements =
         generable_elements |> Enum.filter(fn element -> element["type"] != "App" end)
@@ -609,7 +613,7 @@ defmodule GenEditor.ElementEditor do
         |> Map.put(:generable_elements, generable_elements)
         |> Map.put(:app, app)
 
-      GenDSL.generate_from_blueprint(blueprint, false, File.cwd!())
+      GenDSL.generate_from_blueprint(blueprint, false, File.cwd!() |> Path.dirname())
 
       Kino.Download.new(
         fn -> Jason.encode!(blueprint) end,
@@ -621,11 +625,9 @@ defmodule GenEditor.ElementEditor do
 
       files = File.ls!("./" <> app["path"]) |> Enum.map(&String.to_charlist/1)
 
-      case :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]]) do
-        {:ok, {filename, bytes}} -> {:ok, {filename, bytes}}
-        {:error, reason} -> {:error, reason}
-      end
+      {:ok, {filename, bytes}} = :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]]) # Not handled to show errors in cell
 
+      IO.puts("Files are ready")
       Kino.Layout.grid(
         [
           Kino.Download.new(fn -> Jason.encode!(blueprint) end,
