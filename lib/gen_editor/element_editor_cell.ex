@@ -82,7 +82,7 @@ defmodule GenEditor.ElementEditor do
       "no_schema" => attrs["no_schema"] || false,
       "no_context" => attrs["no_context"] || false,
       # Notifier Element standalone
-      "message_names" => attrs["message_names"] || [%{"message_name" => "welcome"}],
+      "message_names" => attrs["message_names"] || ["welcome"],
       # Auth Element
       "context" => attrs["context"] || "",
       "schema" => attrs["schema"] || "",
