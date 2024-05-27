@@ -543,8 +543,9 @@ defmodule GenEditor.ElementEditor do
     IO.puts("Blueprint attrs: #{inspect(attrs)}")
     quote do
       schemas = blueprint |> Map.fetch!(:metadata) |> Enum.filter(fn element -> element["type"] == "schema" end)
-      app = blueprint |> Map.fetch!(:generable_elements) |> Enum.filter(fn element -> element["type"] == "app" end) |> Enum.take(1)
+      app = blueprint |> Map.fetch!(:generable_elements) |> Enum.filter(fn element -> element["type"] == "app" end) |> Enum.at(0)
       generable_elements = blueprint |> Map.fetch!(:generable_elements)
+      generable_elements = generable_elements |> Enum.filter(fn element -> element["type"] == "" end) # Drops duplicated app elements, revemove for multi-app support.
       generable_elements = generable_elements
       |> Enum.map(fn element ->
         case Enum.member?(unquote(@generable_elements_dependency), element["type"]) do
@@ -565,7 +566,7 @@ defmodule GenEditor.ElementEditor do
         |> Map.put(:generable_elements, generable_elements)
         |> Map.put(:app, app)
 
-      GenDSL.generate_from_blueprint(blueprint)
+      GenDSL.generate_from_blueprint(blueprint, false, File.cwd!())
 
       Kino.Download.new(
         fn -> Jason.encode!(blueprint) end,
