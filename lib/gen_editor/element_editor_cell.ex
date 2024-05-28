@@ -252,7 +252,7 @@ defmodule GenEditor.ElementEditor do
               {:ok, metadata} ->
                 metadata
                 |> Enum.filter(fn element -> element["type"] == "Schema" end)
-                |> Enum.map(fn element -> %{label: element["name"], value: element["name"]} end)
+                |> Enum.map(fn element -> %{label: element["plural"], value: element["plural"]} end)
 
               _ ->
                 []
