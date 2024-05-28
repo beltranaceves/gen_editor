@@ -3,7 +3,7 @@ defmodule GenEditor.ElementEditor do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Generable Element"
 
-  @generable_elements ~w|App Html Auth Notifier Cert Channel Presence Secret Schema Context|
+  @generable_elements ~w|App Html Auth Notifier Cert Channel Presence Secret Schema Context Module|
   @generable_elements_dependent ~w|Module Web ContextApp Schema Context|
   @generable_elements_dependency ~w|Auth Context Embedded Html Json Live|
 
@@ -15,10 +15,10 @@ defmodule GenEditor.ElementEditor do
 
     deps = %{
       "context_list" => get_context_list(ctx),
-      "schema_list" => attrs["schema_list"] || [],
-      "web_list" => attrs["web_list"] || [],
-      "context_apps_list" => attrs["context_apps_list"] || [],
-      "module_list" => attrs["module_list"] || [],
+      "schema_list" => get_schema_list(ctx),
+      "web_list" => get_web_list(ctx),
+      "context_apps_list" => get_context_apps_list(ctx),
+      "module_list" => get_module_list(ctx),
       "hashing_lib_list" => [
         %{label: "bcrypt", value: "bcrypt"},
         %{label: "argon2", value: "argon2"},
@@ -105,12 +105,12 @@ defmodule GenEditor.ElementEditor do
       "length" => attrs["length"] || "",
       # Schema Element
       "module" => attrs["module"] || "",
-      "name" => attrs["name"] || "",
+      "plural" => attrs["plural"] || "",
       "table" => attrs["table"] || "",
       "repo" => attrs["repo"] || "",
       "migration_dir" => attrs["migration_dir"] || "",
       "prefix" => attrs["prefix"] || "",
-      "no_migration" => attrs["no_migration"] || true,
+      "no_migration" => attrs["no_migration"] || false,
       "binary_id" => attrs["binary_id"] || false,
       "context_app" => attrs["context_app"] || "",
       "fields" => attrs["fields"] || [%{"datatype" => "string", "field_name" => "username"}],
@@ -321,22 +321,6 @@ defmodule GenEditor.ElementEditor do
                   |> Enum.map(fn element ->
                     %{label: element["module"], value: element["module"]}
                   end)
-
-                case blueprint |> Map.fetch(:generable_elements) do
-                  {:ok, generable_elements} ->
-                    generable_elements
-                    |> Enum.filter(fn element ->
-                      element["type"] == "App" and Map.has_key?(element, "module")
-                    end)
-                    |> Enum.map(fn element ->
-                      %{label: element["module"], value: element["module"]}
-                    end)
-                    |> Enum.concat(modules)
-
-                  _ ->
-                    modules
-                end
-
               _ ->
                 []
             end
@@ -376,7 +360,7 @@ defmodule GenEditor.ElementEditor do
         ~w||
 
       "Schema" ->
-        ~w|module name standalone|
+        ~w|module plural standalone|
 
       "Context" ->
         ~w|context standalone|
@@ -462,7 +446,7 @@ defmodule GenEditor.ElementEditor do
         ~w|length|
 
       "Schema" ->
-        ~w|module name table repo migration_dir prefix no_migration binary_id context_app fields standalone|
+        ~w|module plural table repo migration_dir prefix no_migration binary_id context_app fields standalone|
 
       "Context" ->
         ~w|context no_merge_with_existing_context merge_with_existing_context no_schema schema standalone|
@@ -613,7 +597,7 @@ defmodule GenEditor.ElementEditor do
         |> Map.put(:generable_elements, generable_elements)
         |> Map.put(:app, app)
 
-      GenDSL.generate_from_blueprint(blueprint, false, File.cwd!() |> Path.dirname())
+      GenDSL.generate_from_blueprint(blueprint, false, File.cwd!())
 
       Kino.Download.new(
         fn -> Jason.encode!(blueprint) end,
@@ -664,6 +648,22 @@ defmodule GenEditor.ElementEditor do
     end
   end
 
+  defp to_quoted(%{"type" => type, "standalone" => true} = attrs) when type in @generable_elements do
+    attrs =
+      attrs
+      |> Map.filter(fn {_key, val} ->
+        val not in [nil, "", []]
+      end)
+
+    quote do
+      blueprint =
+        blueprint
+        |> Map.update!(:generable_elements, &(&1 ++ [unquote(attrs)]))
+
+      {:ok, "Added: " <> unquote(attrs["type"])}
+    end
+  end
+
   defp to_quoted(%{"type" => type} = attrs) when type in @generable_elements do
     attrs =
       attrs
@@ -680,11 +680,11 @@ defmodule GenEditor.ElementEditor do
     end
   end
 
-  defp to_quoted(_attr) do
+  defp to_quoted(attr) do
     # IO.puts("to_quoted everything else: #{inspect(attr)}")
 
     quote do
-      :ok
+      {:error, "Unrecognized element type" <> inspect(unquote(attr))}
     end
   end
 
