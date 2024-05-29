@@ -210,7 +210,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   def update_deps(ctx) do
-    # IO.puts("updating deps: #{inspect(ctx)}")
+    IO.puts("updating deps: #{inspect(ctx)}")
     %{
       "context_list" => get_context_list(ctx),
       "schema_list" => get_schema_list(ctx),
@@ -252,7 +252,9 @@ defmodule GenEditor.ElementEditor do
               {:ok, metadata} ->
                 metadata
                 |> Enum.filter(fn element -> element["type"] == "Schema" end)
-                |> Enum.map(fn element -> %{label: element["plural"], value: element["plural"]} end)
+                |> Enum.map(fn element ->
+                  %{label: element["plural"], value: element["plural"]}
+                end)
 
               _ ->
                 []
@@ -321,6 +323,7 @@ defmodule GenEditor.ElementEditor do
                   |> Enum.map(fn element ->
                     %{label: element["module"], value: element["module"]}
                   end)
+
               _ ->
                 []
             end
@@ -563,11 +566,13 @@ defmodule GenEditor.ElementEditor do
         |> Enum.at(0)
 
       generable_elements = blueprint |> Map.fetch!(:generable_elements)
-      generable_elements = generable_elements |> Enum.map(
-        fn element ->
+
+      generable_elements =
+        generable_elements
+        |> Enum.map(fn element ->
           element = element |> Map.put("path", app["path"])
-        end
-      )
+        end)
+
       # Drops duplicated app elements, revemove for multi-app support.
       generable_elements =
         generable_elements |> Enum.filter(fn element -> element["type"] != "App" end)
@@ -609,9 +614,12 @@ defmodule GenEditor.ElementEditor do
 
       files = File.ls!("./" <> app["path"]) |> Enum.map(&String.to_charlist/1)
 
-      {:ok, {filename, bytes}} = :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]]) # Not handled to show errors in cell
+      # Not handled to show errors in cell
+      {:ok, {filename, bytes}} =
+        :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]])
 
       IO.puts("Files are ready")
+
       Kino.Layout.grid(
         [
           Kino.Download.new(fn -> Jason.encode!(blueprint) end,
@@ -648,7 +656,8 @@ defmodule GenEditor.ElementEditor do
     end
   end
 
-  defp to_quoted(%{"type" => type, "standalone" => true} = attrs) when type in @generable_elements do
+  defp to_quoted(%{"type" => type, "standalone" => true} = attrs)
+       when type in @generable_elements do
     attrs =
       attrs
       |> Map.filter(fn {_key, val} ->
@@ -696,14 +705,21 @@ defmodule GenEditor.ElementEditor do
 
   @impl true
   def handle_info({:scan_binding_result, binding, _env}, ctx) do
-    # IO.puts("Scanning binding result: #{inspect(binding)}")
+    IO.puts("Scanning binding result: #{inspect(binding)}")
 
     ctx =
       case List.keyfind(binding, :blueprint, 0) do
         {_key, blueprint} ->
-          assign(ctx, blueprint: blueprint)
-
-        # broadcast_event(ctx, "blueprint", blueprint) # TODO: check again that this is not needed to propagate the blueprint, and document why it is being shared by other method
+          updated_deps =
+            %{}
+            |> Map.put(
+              "deps",
+              ctx.assigns.fields["deps"] |> Map.merge(update_deps(ctx))
+            )
+          ctx = update(ctx, :fields, &Map.merge(&1, updated_deps))
+          ctx = assign(ctx, blueprint: blueprint)
+          broadcast_event(ctx, "blueprint", blueprint) # TODO: check again that this is not needed to propagate the blueprint, and document why it is being shared by other method
+          ctx
         nil ->
           ctx
       end

@@ -5,7 +5,7 @@ defmodule GenEditor.MixProject do
     [
       app: :gen_editor,
       description: "Kino smart cells for Phoenix's phx.gen commands",
-      version: "0.2.5",
+      version: "0.2.7",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -39,7 +39,7 @@ defmodule GenEditor.MixProject do
       {:uuid, "~> 1.1.8"},
       # {:gen_cli, path: "../gen_cli", only: :dev},
       # {:gen_dsl, path: "../gen_dsl", only: :dev}
-      {:gen_dsl, "~> 0.3.5"},
+      {:gen_dsl, "~> 0.3.6"},
       {:gen_cli, "~> 0.2.2"}
     ]
   end
