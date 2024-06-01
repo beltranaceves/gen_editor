@@ -365,6 +365,9 @@ defmodule GenEditor.ElementEditor do
       "Schema" ->
         ~w|module plural standalone|
 
+      "Embedded" ->
+        ~w|module|
+
       "Context" ->
         ~w|context standalone|
 
@@ -408,6 +411,9 @@ defmodule GenEditor.ElementEditor do
       "Schema" ->
         ~w|no_migration table binary_id repo migration_dir prefix context_app|
 
+      "Embedded" ->
+        ~w||
+
       "Context" ->
         ~w|no_merge_with_existing_context merge_with_existing_context no_schema schema|
 
@@ -450,6 +456,9 @@ defmodule GenEditor.ElementEditor do
 
       "Schema" ->
         ~w|module plural table repo migration_dir prefix no_migration binary_id context_app fields standalone|
+
+      "Embedded" ->
+        ~w|module fields|
 
       "Context" ->
         ~w|context no_merge_with_existing_context merge_with_existing_context no_schema schema standalone|
