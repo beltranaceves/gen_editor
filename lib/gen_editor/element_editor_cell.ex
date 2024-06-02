@@ -3,7 +3,7 @@ defmodule GenEditor.ElementEditor do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Generable Element"
 
-  @generable_elements ~w|App Html Auth Notifier Cert Channel Presence Secret Schema Context Module|
+  @generable_elements ~w|App Html Auth Notifier Cert Channel Presence Secret Schema Embedded Context Module|
   @generable_elements_dependent ~w|Module Web ContextApp Schema Context|
   @generable_elements_dependency ~w|Auth Context Embedded Html Json Live|
 
@@ -78,40 +78,25 @@ defmodule GenEditor.ElementEditor do
       "context" => attrs["context"] || "",
       "schema" => attrs["schema"] || "",
       "web" => attrs["web"] || "",
-      "context_app" => attrs["context_app"] || "",
-      "no_schema" => attrs["no_schema"] || false,
       "no_context" => attrs["no_context"] || false,
       # Notifier Element standalone
       "message_names" => attrs["message_names"] || ["welcome"],
       # Auth Element
-      "context" => attrs["context"] || "",
-      "schema" => attrs["schema"] || "",
-      "web" => attrs["web"] || "",
       "hashing_lib" => attrs["hashing_lib"] || "",
       "live" => attrs["live"] || true,
-      "no_live" => attrs["no_live"] || false,
-      # Cert Element
-      "app" => attrs["app"] || "",
       "domain" => attrs["domain"] || "",
       "url" => attrs["url"] || "",
       "output_path" => attrs["output_path"] || "",
       "cert_name" => attrs["cert_name"] || "",
-      # Channel Element
-      "module" => attrs["module"] || "",
       # TODO: rename all properties to match the element names in gen_dsl for easier use
-      # Presence Element
-      "module" => attrs["module"] || "",
-      # Secret Element
       "length" => attrs["length"] || "",
       # Schema Element
-      "module" => attrs["module"] || "",
       "plural" => attrs["plural"] || "",
       "table" => attrs["table"] || "",
       "repo" => attrs["repo"] || "",
       "migration_dir" => attrs["migration_dir"] || "",
       "prefix" => attrs["prefix"] || "",
       "no_migration" => attrs["no_migration"] || false,
-      "binary_id" => attrs["binary_id"] || false,
       "context_app" => attrs["context_app"] || "",
       "fields" => attrs["fields"] || [%{"datatype" => "string", "field_name" => "username"}],
       # Context Elements
@@ -206,131 +191,6 @@ defmodule GenEditor.ElementEditor do
       %{"variable" => value}
     else
       %{"variable" => fields["variable"]}
-    end
-  end
-
-  def update_deps(ctx) do
-    IO.puts("updating deps: #{inspect(ctx)}")
-    %{
-      "context_list" => get_context_list(ctx),
-      "schema_list" => get_schema_list(ctx),
-      "web_list" => get_web_list(ctx),
-      "context_apps_list" => get_context_apps_list(ctx),
-      "module_list" => get_module_list(ctx)
-    }
-  end
-
-  def get_context_list(ctx) do
-    case ctx do
-      context ->
-        case context.assigns |> Map.fetch(:blueprint) do
-          {:ok, blueprint} ->
-            case blueprint |> Map.fetch(:metadata) do
-              {:ok, metadata} ->
-                metadata
-                |> Enum.filter(fn element -> element["type"] == "Context" end)
-                |> Enum.map(fn element ->
-                  %{label: element["context"], value: element["context"]}
-                end)
-
-              _ ->
-                []
-            end
-
-          _ ->
-            []
-        end
-    end
-  end
-
-  def get_schema_list(ctx) do
-    case ctx do
-      context ->
-        case context.assigns |> Map.fetch(:blueprint) do
-          {:ok, blueprint} ->
-            case blueprint |> Map.fetch(:metadata) do
-              {:ok, metadata} ->
-                metadata
-                |> Enum.filter(fn element -> element["type"] == "Schema" end)
-                |> Enum.map(fn element ->
-                  %{label: element["plural"], value: element["plural"]}
-                end)
-
-              _ ->
-                []
-            end
-
-          _ ->
-            []
-        end
-    end
-  end
-
-  def get_web_list(ctx) do
-    case ctx do
-      context ->
-        case context.assigns |> Map.fetch(:blueprint) do
-          {:ok, blueprint} ->
-            case blueprint |> Map.fetch(:metadata) do
-              {:ok, metadata} ->
-                metadata
-                |> Enum.filter(fn element -> element["type"] == "Web" end)
-                |> Enum.map(fn element -> %{label: element["name"], value: element["name"]} end)
-
-              _ ->
-                []
-            end
-
-          _ ->
-            []
-        end
-    end
-  end
-
-  def get_context_apps_list(ctx) do
-    case ctx do
-      context ->
-        case context.assigns |> Map.fetch(:blueprint) do
-          {:ok, blueprint} ->
-            case blueprint |> Map.fetch(:metadata) do
-              {:ok, metadata} ->
-                metadata
-                |> Enum.filter(fn element -> element["type"] == "ContextApp" end)
-                |> Enum.map(fn element ->
-                  %{label: element["context_app"], value: element["context_app"]}
-                end)
-
-              _ ->
-                []
-            end
-
-          _ ->
-            []
-        end
-    end
-  end
-
-  def get_module_list(ctx) do
-    case ctx do
-      context ->
-        case context.assigns |> Map.fetch(:blueprint) do
-          {:ok, blueprint} ->
-            case blueprint |> Map.fetch(:metadata) do
-              {:ok, metadata} ->
-                modules =
-                  metadata
-                  |> Enum.filter(fn element -> element["type"] == "Module" end)
-                  |> Enum.map(fn element ->
-                    %{label: element["module"], value: element["module"]}
-                  end)
-
-              _ ->
-                []
-            end
-
-          _ ->
-            []
-        end
     end
   end
 
@@ -474,6 +334,130 @@ defmodule GenEditor.ElementEditor do
     end
   end
 
+    def update_deps(ctx) do
+    IO.puts("updating deps: #{inspect(ctx)}")
+    %{
+      "context_list" => get_context_list(ctx),
+      "schema_list" => get_schema_list(ctx),
+      "web_list" => get_web_list(ctx),
+      "context_apps_list" => get_context_apps_list(ctx),
+      "module_list" => get_module_list(ctx)
+    }
+  end
+
+  def get_context_list(ctx) do
+    case ctx do
+      context ->
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "Context" end)
+                |> Enum.map(fn element ->
+                  %{label: element["context"], value: element["context"]}
+                end)
+
+              _ ->
+                []
+            end
+
+          _ ->
+            []
+        end
+    end
+  end
+
+  def get_schema_list(ctx) do
+    case ctx do
+      context ->
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "Schema" end)
+                |> Enum.map(fn element ->
+                  %{label: element["plural"], value: element["plural"]}
+                end)
+
+              _ ->
+                []
+            end
+
+          _ ->
+            []
+        end
+    end
+  end
+
+  def get_web_list(ctx) do
+    case ctx do
+      context ->
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "Web" end)
+                |> Enum.map(fn element -> %{label: element["name"], value: element["name"]} end)
+
+              _ ->
+                []
+            end
+
+          _ ->
+            []
+        end
+    end
+  end
+
+  def get_context_apps_list(ctx) do
+    case ctx do
+      context ->
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "ContextApp" end)
+                |> Enum.map(fn element ->
+                  %{label: element["context_app"], value: element["context_app"]}
+                end)
+
+              _ ->
+                []
+            end
+
+          _ ->
+            []
+        end
+    end
+  end
+
+  def get_module_list(ctx) do
+    case ctx do
+      context ->
+        case context.assigns |> Map.fetch(:blueprint) do
+          {:ok, blueprint} ->
+            case blueprint |> Map.fetch(:metadata) do
+              {:ok, metadata} ->
+                  metadata
+                  |> Enum.filter(fn element -> element["type"] == "Module" end)
+                  |> Enum.map(fn element ->
+                    %{label: element["module"], value: element["module"]}
+                  end)
+
+              _ ->
+                []
+            end
+
+          _ ->
+            []
+        end
+    end
+  end
+
   @impl true
   def to_attrs(%{assigns: %{fields: fields}}) do
     cell_keys = attrs_from_type(fields["type"])
@@ -523,11 +507,11 @@ defmodule GenEditor.ElementEditor do
     end
   end
 
-  defp any_fields_filled?(_, []), do: true
+  # defp any_fields_filled?(_, []), do: true
 
-  defp any_fields_filled?(attrs, keys) do
-    Enum.any?(keys, fn key -> attrs[key] not in [nil, "", []] end)
-  end
+  # defp any_fields_filled?(attrs, keys) do
+  #   Enum.any?(keys, fn key -> attrs[key] not in [nil, "", []] end)
+  # end
 
   # TODO: implement to quoted with GenDSL Element map attrs for all elements
   defp to_quoted(%{"type" => "App"} = attrs) do
@@ -767,19 +751,6 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp missing_dep(_ctx), do: nil
-
-  defp join_quoted(quoted_blocks) do
-    asts =
-      Enum.flat_map(quoted_blocks, fn
-        {:__block__, _meta, nodes} -> nodes
-        node -> [node]
-      end)
-
-    case asts do
-      [node] -> node
-      nodes -> {:__block__, [], nodes}
-    end
-  end
 
   defp help_box(%{"type" => "bigquery"}) do
     if Code.ensure_loaded?(Mint.HTTP) do
