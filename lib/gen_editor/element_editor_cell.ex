@@ -598,16 +598,23 @@ defmodule GenEditor.ElementEditor do
       generable_elements =
         generable_elements
         |> Enum.map(fn element ->
-          case Enum.member?(unquote(@generable_elements_dependency), element["type"]) do
+          IO.inspect(element, label: "ELEMENT")
+
+          case Enum.member?(unquote(@generable_elements_schema_dependent), element["type"]) do
             true ->
+              IO.puts("DEPENDENCY DETECTED: #{inspect(element)}")
+              IO.inspect(schemas, label: "SCHEMAS")
+
               schema =
                 schemas
                 |> Enum.filter(fn schema ->
                   IO.puts("SEARCHING FOR SCHEMA: #{inspect(schema)}")
                   IO.puts("WITH ELEMENT: #{inspect(element)}")
-                  schema["name"] == element["schema"]
+                  schema["plural"] == element["schema"]
                 end)
+                |> Enum.at(0)
 
+              IO.inspect(schema, label: "FOUND SCHEMA")
               element |> Map.put("schema", schema)
 
             false ->
@@ -656,7 +663,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp to_quoted(%{"type" => type, "standalone" => false} = attrs)
-       when type in @generable_elements_dependent do
+       when type in @generable_elements_dependencies do
     # IO.puts("DEPENDENCY DETECTED: #{inspect(attrs)}")
 
     attrs =
@@ -734,10 +741,14 @@ defmodule GenEditor.ElementEditor do
               "deps",
               ctx.assigns.fields["deps"] |> Map.merge(update_deps(ctx))
             )
+
           ctx = update(ctx, :fields, &Map.merge(&1, updated_deps))
           ctx = assign(ctx, blueprint: blueprint)
-          broadcast_event(ctx, "blueprint", blueprint) # TODO: check again that this is not needed to propagate the blueprint, and document why it is being shared by other method
+
+          # TODO: check again that this is not needed to propagate the blueprint, and document why it is being shared by other method
+          broadcast_event(ctx, "blueprint", blueprint)
           ctx
+
         nil ->
           ctx
       end
