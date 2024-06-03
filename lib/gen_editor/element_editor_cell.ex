@@ -91,6 +91,8 @@ defmodule GenEditor.ElementEditor do
       "cert_name" => attrs["cert_name"] || "",
       # TODO: rename all properties to match the element names in gen_dsl for easier use
       "length" => attrs["length"] || "",
+      "docker" => attrs["docker"] || false,
+      "ecto" => attrs["ecto"] || true,
       # Schema Element
       "plural" => attrs["plural"] || "",
       "table" => attrs["table"] || "",
@@ -226,6 +228,9 @@ defmodule GenEditor.ElementEditor do
       "Presence" ->
         ~w||
 
+      "Release" ->
+        ~w||
+
       "Socket" ->
         ~w|module|
 
@@ -281,6 +286,9 @@ defmodule GenEditor.ElementEditor do
       "Presence" ->
         ~w|module|
 
+      "Release" ->
+        ~w|docker ecto no_ecto|
+
       "Socket" ->
         ~w||
 
@@ -335,6 +343,9 @@ defmodule GenEditor.ElementEditor do
 
       "Presence" ->
         ~w|module|
+
+      "Release" ->
+        ~w|docker ecto no_ecto|
 
       "Socket" ->
         ~w|module|
