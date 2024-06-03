@@ -344,7 +344,7 @@ defmodule GenEditor.ElementEditor do
     end
   end
 
-    def update_deps(ctx) do
+  def update_deps(ctx) do
     IO.puts("updating deps: #{inspect(ctx)}")
 
     %{
@@ -453,11 +453,11 @@ defmodule GenEditor.ElementEditor do
           {:ok, blueprint} ->
             case blueprint |> Map.fetch(:metadata) do
               {:ok, metadata} ->
-                  metadata
-                  |> Enum.filter(fn element -> element["type"] == "Module" end)
-                  |> Enum.map(fn element ->
-                    %{label: element["module"], value: element["module"]}
-                  end)
+                metadata
+                |> Enum.filter(fn element -> element["type"] == "Module" end)
+                |> Enum.map(fn element ->
+                  %{label: element["module"], value: element["module"]}
+                end)
 
               _ ->
                 []
