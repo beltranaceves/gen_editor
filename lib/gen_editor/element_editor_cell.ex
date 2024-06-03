@@ -3,7 +3,7 @@ defmodule GenEditor.ElementEditor do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Generable Element"
 
-  @generable_elements ~w|App Html Json Auth Notifier Cert Channel Presence Secret Schema Embedded Context Module|
+  @generable_elements ~w|App Html Live Json Auth Notifier Cert Channel Presence Secret Schema Embedded Context Module|
   @generable_elements_dependencies ~w|Module Web ContextApp Schema Context|
 
   @generable_elements_schema_dependent ~w|Auth Context Html Json JSON Live|
@@ -205,6 +205,9 @@ defmodule GenEditor.ElementEditor do
       "Html" ->
         ~w|context|
 
+      "Live" ->
+        ~w|context|
+
       "Json" ->
         ~w|context|
 
@@ -254,6 +257,9 @@ defmodule GenEditor.ElementEditor do
       "Html" ->
         ~w|web context_app no_schema no_context|
 
+      "Live" ->
+        ~w|web context_app no_schema no_context|
+
       "Json" ->
         ~w|web context_app no_schema no_context|
 
@@ -276,10 +282,10 @@ defmodule GenEditor.ElementEditor do
         ~w|length|
 
       "Schema" ->
-        ~w|no_migration table binary_id repo migration_dir prefix context_app|
+        ~w|no_migration table binary_id repo migration_dir prefix context_app fields|
 
       "Embedded" ->
-        ~w||
+        ~w|fields|
 
       "Context" ->
         ~w|no_merge_with_existing_context merge_with_existing_context no_schema schema|
@@ -301,6 +307,9 @@ defmodule GenEditor.ElementEditor do
         ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
 
       "Html" ->
+        ~w|context schema web context_app no_schema no_context|
+
+      "Live" ->
         ~w|context schema web context_app no_schema no_context|
 
       "Json" ->
