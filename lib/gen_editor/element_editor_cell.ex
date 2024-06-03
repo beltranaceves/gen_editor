@@ -4,8 +4,9 @@ defmodule GenEditor.ElementEditor do
   use Kino.SmartCell, name: "Generable Element"
 
   @generable_elements ~w|App Html Json Auth Notifier Cert Channel Presence Secret Schema Embedded Context Module|
-  @generable_elements_dependent ~w|Module Web ContextApp Schema Context|
-  @generable_elements_dependency ~w|Auth Context Embedded Html Json Live|
+  @generable_elements_dependencies ~w|Module Web ContextApp Schema Context|
+
+  @generable_elements_schema_dependent ~w|Auth Context Html Json JSON Live|
 
   @impl true
   def init(attrs, ctx) do
