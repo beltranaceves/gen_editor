@@ -564,8 +564,6 @@ defmodule GenEditor.ElementEditor do
         |> Enum.filter(fn element -> element["type"] == "App" end)
         |> Enum.at(0)
 
-      IO.inspect(blueprint, label: "Blueprint after some processing")
-
       blueprint =
         blueprint
         |> Map.put(
@@ -575,7 +573,6 @@ defmodule GenEditor.ElementEditor do
           |> Enum.map(fn element -> element |> Map.put("path", app["path"]) end)
         )
 
-      IO.inspect(blueprint, label: "Blueprint after some processing 1")
       generable_elements =
         blueprint
         |> Map.fetch!(:generable_elements)
@@ -583,14 +580,11 @@ defmodule GenEditor.ElementEditor do
           element |> Map.put("path", app["path"])
         end)
 
-      IO.inspect(blueprint, label: "Blueprint after some processing 2")
-
       schemas =
         blueprint
         |> Map.fetch!(:metadata)
         |> Enum.filter(fn element -> element["type"] == "Schema" end)
 
-      IO.inspect(schemas, label: "ACCESSING SCHEMAS")
       # Drops duplicated app elements, remove for multi-app support.
       generable_elements =
         generable_elements |> Enum.filter(fn element -> element["type"] != "App" end)
@@ -598,13 +592,8 @@ defmodule GenEditor.ElementEditor do
       generable_elements =
         generable_elements
         |> Enum.map(fn element ->
-          IO.inspect(element, label: "ELEMENT")
-
           case Enum.member?(unquote(@generable_elements_schema_dependent), element["type"]) do
             true ->
-              IO.puts("DEPENDENCY DETECTED: #{inspect(element)}")
-              IO.inspect(schemas, label: "SCHEMAS")
-
               schema =
                 schemas
                 |> Enum.filter(fn schema ->
@@ -614,7 +603,6 @@ defmodule GenEditor.ElementEditor do
                 end)
                 |> Enum.at(0)
 
-              IO.inspect(schema, label: "FOUND SCHEMA")
               element |> Map.put("schema", schema)
 
             false ->
