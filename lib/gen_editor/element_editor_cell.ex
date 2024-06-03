@@ -346,6 +346,7 @@ defmodule GenEditor.ElementEditor do
 
     def update_deps(ctx) do
     IO.puts("updating deps: #{inspect(ctx)}")
+
     %{
       "context_list" => get_context_list(ctx),
       "schema_list" => get_schema_list(ctx),
@@ -557,26 +558,40 @@ defmodule GenEditor.ElementEditor do
     IO.puts("Blueprint attrs: #{inspect(attrs)}")
 
     quote do
-      schemas =
-        blueprint
-        |> Map.fetch!(:metadata)
-        |> Enum.filter(fn element -> element["type"] == "schema" end)
-
       app =
         blueprint
         |> Map.fetch!(:generable_elements)
         |> Enum.filter(fn element -> element["type"] == "App" end)
         |> Enum.at(0)
 
-      generable_elements = blueprint |> Map.fetch!(:generable_elements)
+      IO.inspect(blueprint, label: "Blueprint after some processing")
 
+      blueprint =
+        blueprint
+        |> Map.put(
+          :metadata,
+          blueprint
+          |> Map.fetch!(:metadata)
+          |> Enum.map(fn element -> element |> Map.put("path", app["path"]) end)
+        )
+
+      IO.inspect(blueprint, label: "Blueprint after some processing 1")
       generable_elements =
-        generable_elements
+        blueprint
+        |> Map.fetch!(:generable_elements)
         |> Enum.map(fn element ->
-          element = element |> Map.put("path", app["path"])
+          element |> Map.put("path", app["path"])
         end)
 
-      # Drops duplicated app elements, revemove for multi-app support.
+      IO.inspect(blueprint, label: "Blueprint after some processing 2")
+
+      schemas =
+        blueprint
+        |> Map.fetch!(:metadata)
+        |> Enum.filter(fn element -> element["type"] == "Schema" end)
+
+      IO.inspect(schemas, label: "ACCESSING SCHEMAS")
+      # Drops duplicated app elements, remove for multi-app support.
       generable_elements =
         generable_elements |> Enum.filter(fn element -> element["type"] != "App" end)
 
