@@ -106,6 +106,9 @@ input[required].empty {
   border: 1px solid var(--red-300);
 }
 
+select[required].empty {
+  border: 1px solid var(--red-300);
+}
 .input::placeholder {
   color: var(--gray-400);
 }
