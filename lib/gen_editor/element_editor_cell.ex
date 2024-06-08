@@ -3,7 +3,7 @@ defmodule GenEditor.ElementEditor do
   use Kino.JS.Live
   use Kino.SmartCell, name: "Generable Element"
 
-  @generable_elements ~w|App Html Live Json Auth Notifier Cert Channel Presence Secret Schema Embedded Context Module Socket|
+  @generable_elements ~w|App Html Live Json Auth Notifier Cert Channel Presence Secret Schema Embedded Context Module Socket ContextApp|
   @generable_elements_dependencies ~w|Module Web ContextApp Schema Context|
 
   @generable_elements_schema_dependent ~w|Auth Context Html Json JSON Live|
@@ -246,6 +246,9 @@ defmodule GenEditor.ElementEditor do
       "Context" ->
         ~w|context standalone|
 
+      "ContextApp" ->
+        ~w|context_app standalone|
+
       "Module" ->
         ~w|module standalone|
 
@@ -304,6 +307,9 @@ defmodule GenEditor.ElementEditor do
       "Context" ->
         ~w|no_merge_with_existing_context merge_with_existing_context no_schema schema|
 
+      "ContextApp" ->
+        ~w||
+
       "Module" ->
         ~w||
 
@@ -361,6 +367,9 @@ defmodule GenEditor.ElementEditor do
 
       "Context" ->
         ~w|context no_merge_with_existing_context merge_with_existing_context no_schema schema standalone|
+
+      "ContextApp" ->
+        ~w|context_app standalone|
 
       "Module" ->
         ~w|module standalone|
