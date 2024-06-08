@@ -81,7 +81,7 @@ defmodule GenEditor.ElementEditor do
       "web" => attrs["web"] || "",
       "no_context" => attrs["no_context"] || false,
       # Notifier Element standalone
-      "message_names" => attrs["message_names"] || ["welcome"],
+      "message_names" => attrs["message_names"] || ["Welcome"],
       # Auth Element
       "hashing_lib" => attrs["hashing_lib"] || "",
       "live" => attrs["live"] || true,
@@ -217,7 +217,7 @@ defmodule GenEditor.ElementEditor do
         ~w|context|
 
       "Notifier" ->
-        ~w|context module message_names|
+        ~w|context module|
 
       "Cert" ->
         ~w||
@@ -275,7 +275,7 @@ defmodule GenEditor.ElementEditor do
         ~w|web hashing_lib no_live live|
 
       "Notifier" ->
-        ~w|context_app|
+        ~w|context_app message_names|
 
       "Cert" ->
         ~w|app domain url output_path cert_name|
