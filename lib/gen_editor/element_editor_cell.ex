@@ -323,64 +323,66 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp attrs_from_type(type) do
-    attrs = case type do
-      "App" ->
-        ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
+    attrs =
+      case type do
+        "App" ->
+          ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
 
-      "Html" ->
-        ~w|context schema web context_app no_schema no_context|
+        "Html" ->
+          ~w|context schema web context_app no_schema no_context|
 
-      "Live" ->
-        ~w|context schema web context_app no_schema no_context|
+        "Live" ->
+          ~w|context schema web context_app no_schema no_context|
 
-      "Json" ->
-        ~w|context schema web context_app no_schema no_context|
+        "Json" ->
+          ~w|context schema web context_app no_schema no_context|
 
-      "Auth" ->
-        ~w|context schema web hashing_libe live no_live|
+        "Auth" ->
+          ~w|context schema web hashing_libe live no_live|
 
-      "Notifier" ->
-        ~w|module message_names context context_app|
+        "Notifier" ->
+          ~w|module message_names context context_app|
 
-      "Cert" ->
-        ~w|app domain url output_path cert_name|
+        "Cert" ->
+          ~w|app domain url output_path cert_name|
 
-      "Channel" ->
-        ~w|module|
+        "Channel" ->
+          ~w|module|
 
-      "Presence" ->
-        ~w|module|
+        "Presence" ->
+          ~w|module|
 
-      "Release" ->
-        ~w|docker ecto no_ecto|
+        "Release" ->
+          ~w|docker ecto no_ecto|
 
-      "Socket" ->
-        ~w|module|
+        "Socket" ->
+          ~w|module|
 
-      "Secret" ->
-        ~w|length|
+        "Secret" ->
+          ~w|length|
 
-      "Schema" ->
-        ~w|module plural table repo migration_dir prefix no_migration binary_id context_app fields standalone|
+        "Schema" ->
+          ~w|module plural table repo migration_dir prefix no_migration binary_id context_app fields standalone|
 
-      "Embedded" ->
-        ~w|module fields|
+        "Embedded" ->
+          ~w|module fields|
 
-      "Context" ->
-        ~w|context no_merge_with_existing_context merge_with_existing_context no_schema schema standalone|
+        "Context" ->
+          ~w|context no_merge_with_existing_context merge_with_existing_context no_schema schema standalone|
 
-      "ContextApp" ->
-        ~w|context_app standalone|
+        "ContextApp" ->
+          ~w|context_app standalone|
 
-      "Module" ->
-        ~w|module standalone|
+        "Module" ->
+          ~w|module standalone|
 
-      "Blueprint" ->
-        ~w||
+        "Blueprint" ->
+          ~w||
 
-      _ ->
-        ~w||
-    end
+        _ ->
+          ~w||
+      end
+
     ["isHelpBoxHidden" | attrs]
   end
 
