@@ -50,6 +50,7 @@ defmodule GenEditor.ElementEditor do
     }
 
     fields = %{
+      "isHelpBoxHidden" => attrs["isHelpBoxHidden"] || true,
       "UUID" => UUID.uuid1(),
       "placeholder" => "Enter a value",
       "variable" => Kino.SmartCell.prefixed_var_name("conn", attrs["variable"]),
@@ -322,7 +323,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp attrs_from_type(type) do
-    case type do
+    attrs = case type do
       "App" ->
         ~w|path app module database no_assets no_esbuild no_tailwind no_ecto no_gettext no_html no_dashboard no_live no_mailer verbose version install no_install binary_id|
 
@@ -380,6 +381,7 @@ defmodule GenEditor.ElementEditor do
       _ ->
         ~w||
     end
+    ["isHelpBoxHidden" | attrs]
   end
 
   def update_deps(ctx) do
