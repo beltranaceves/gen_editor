@@ -181,6 +181,12 @@ select[required].empty {
 .help-box a {
   color: var(--gray-500);
 } */
+ 
+.code {
+  border-color: var(--gray400);
+  white-space: break-spaces;
+  break-inside: avoid
+}
 
 .help-box {
   padding: 16px;
