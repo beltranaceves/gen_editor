@@ -199,7 +199,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp to_updates(_fields, field, value), do: %{field => value}
-  @default_keys ["type"]
+  @default_keys ["type", "isHelpBoxHidden"]
   defp required_attrs_from_type(type) do
     case type do
       "App" ->

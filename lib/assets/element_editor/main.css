@@ -182,10 +182,36 @@ select[required].empty {
   color: var(--gray-500);
 } */
  
-.code {
-  border-color: var(--gray400);
-  white-space: break-spaces;
-  break-inside: avoid
+code.makeup {
+  display: block;
+  overflow-x: auto;
+  white-space: inherit;
+  padding: 0.5em 1em;
+  /* background-color: hsl(210deg 40% 98.04%); */
+  background-color: var(--gray-100);
+  border-radius: 2px;
+  border: 1px solid var(--gray-200);
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 0.4rem;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
 }
 
 .help-box {
