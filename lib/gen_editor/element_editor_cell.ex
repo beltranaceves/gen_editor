@@ -50,6 +50,7 @@ defmodule GenEditor.ElementEditor do
     }
 
     fields = %{
+      "help_box_type" => attrs["help_box_type"] || "iframe", # iframe or simple
       "isHelpBoxHidden" => attrs["isHelpBoxHidden"] || true,
       "UUID" => UUID.uuid1(),
       "placeholder" => "Enter a value",
@@ -199,7 +200,7 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp to_updates(_fields, field, value), do: %{field => value}
-  @default_keys ["type", "isHelpBoxHidden"]
+  @default_keys ["type", "isHelpBoxHidden", "help_box_type"]
   defp required_attrs_from_type(type) do
     case type do
       "App" ->
