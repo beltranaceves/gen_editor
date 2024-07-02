@@ -102,7 +102,11 @@ input[type="number"] {
   appearance: textfield;
 }
 
-input[required].empty {
+.required {
+  border: 1px solid var(--red-300);
+}
+
+input:required:invalid {
   border: 1px solid var(--red-300);
 }
 
