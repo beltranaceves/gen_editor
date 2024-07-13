@@ -254,6 +254,9 @@ defmodule GenEditor.ElementEditor do
       "Module" ->
         ~w|module standalone|
 
+      "Web" ->
+        ~w|web standalone|
+
       "Blueprint" ->
         ~w||
 
@@ -313,6 +316,9 @@ defmodule GenEditor.ElementEditor do
         ~w||
 
       "Module" ->
+        ~w||
+
+      "Web" ->
         ~w||
 
       "Blueprint" ->
@@ -376,6 +382,9 @@ defmodule GenEditor.ElementEditor do
 
         "Module" ->
           ~w|module standalone|
+
+        "Web" ->
+          ~w|web standalone|
 
         "Blueprint" ->
           ~w||
@@ -454,7 +463,7 @@ defmodule GenEditor.ElementEditor do
               {:ok, metadata} ->
                 metadata
                 |> Enum.filter(fn element -> element["type"] == "Web" end)
-                |> Enum.map(fn element -> %{label: element["name"], value: element["name"]} end)
+                |> Enum.map(fn element -> %{label: element["web"], value: element["web"]} end)
 
               _ ->
                 []
