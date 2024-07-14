@@ -641,6 +641,11 @@ defmodule GenEditor.ElementEditor do
       generable_elements =
         generable_elements |> Enum.filter(fn element -> element["type"] != "App" end)
 
+      # Replaces the type with the full module path # TODO: make this pretty, maybe move to function, same with the rest of the function to_quoted
+      generable_elements =
+        generable_elements |> Enum.map(fn element -> element |> Map.replace("type", "GenDSL.Model." <> element |> Map.get("type")) end)
+
+
       generable_elements =
         generable_elements
         |> Enum.map(fn element ->
