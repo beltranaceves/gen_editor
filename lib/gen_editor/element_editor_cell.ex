@@ -616,21 +616,9 @@ defmodule GenEditor.ElementEditor do
         |> Enum.filter(fn element -> element["type"] == "App" end)
         |> Enum.at(0)
 
-      blueprint =
-        blueprint
-        |> Map.put(
-          :metadata,
-          blueprint
-          |> Map.fetch!(:metadata)
-          |> Enum.map(fn element -> element |> Map.put("path", app["path"]) end)
-        )
+      blueprint = broadcast_path_metadata(blueprint, app)
 
-      generable_elements =
-        blueprint
-        |> Map.fetch!(:generable_elements)
-        |> Enum.map(fn element ->
-          element |> Map.put("path", app["path"])
-        end)
+      generable_elements = broadcast_path_generable_elements(blueprint, app)
 
       schemas =
         blueprint
@@ -645,27 +633,7 @@ defmodule GenEditor.ElementEditor do
       generable_elements =
         generable_elements |> Enum.map(fn element -> element |> Map.replace("type", "GenDSL.Model." <> element |> Map.get("type")) end)
 
-
-      generable_elements =
-        generable_elements
-        |> Enum.map(fn element ->
-          case Enum.member?(unquote(@generable_elements_schema_dependent), element["type"]) do
-            true ->
-              schema =
-                schemas
-                |> Enum.filter(fn schema ->
-                  IO.puts("SEARCHING FOR SCHEMA: #{inspect(schema)}")
-                  IO.puts("WITH ELEMENT: #{inspect(element)}")
-                  schema["plural"] == element["schema"]
-                end)
-                |> Enum.at(0)
-
-              element |> Map.put("schema", schema)
-
-            false ->
-              element
-          end
-        end)
+      generable_elements = references_to_embedded(generable_elements, schemas)
 
       blueprint =
         blueprint
@@ -840,4 +808,44 @@ defmodule GenEditor.ElementEditor do
   end
 
   defp help_box(_ctx), do: nil
+
+  defp broadcast_path(blueprint, app) do
+    blueprint
+    |> Map.put(
+      :metadata,
+      blueprint
+      |> Map.fetch!(:metadata)
+      |> Enum.map(fn element -> element |> Map.put("path", app["path"]) end)
+    )
+  end
+
+  defp references_to_embedded(generable_elements, schemas) do
+    generable_elements
+    |> Enum.map(fn element ->
+      case Enum.member?(unquote(@generable_elements_schema_dependent), element["type"]) do
+        true ->
+          schema =
+            schemas
+            |> Enum.filter(fn schema ->
+              IO.puts("SEARCHING FOR SCHEMA: #{inspect(schema)}")
+              IO.puts("WITH ELEMENT: #{inspect(element)}")
+              schema["plural"] == element["schema"]
+            end)
+            |> Enum.at(0)
+
+          element |> Map.put("schema", schema)
+
+        false ->
+          element
+      end
+    end)
+  end
+
+  defp broadcast_path_generable_elements(blueprint, app) do
+    blueprint
+    |> Map.fetch!(:generable_elements)
+    |> Enum.map(fn element ->
+      element |> Map.put("path", app["path"])
+    end)
+  end
 end
