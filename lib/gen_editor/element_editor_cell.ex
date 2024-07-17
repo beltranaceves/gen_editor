@@ -642,36 +642,9 @@ defmodule GenEditor.ElementEditor do
 
       GenDSL.generate_from_blueprint(blueprint, false, File.cwd!())
 
-      Kino.Download.new(
-        fn -> Jason.encode!(blueprint) end,
-        filename: "blueprint.json",
-        label: "Json file"
-      )
 
-      IO.puts("Compressing project...")
-
-      files = File.ls!("./" <> app["path"]) |> Enum.map(&String.to_charlist/1)
-
-      # Not handled to show errors in cell
-      {:ok, {filename, bytes}} =
-        :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]])
-
-      IO.puts("Files are ready")
-
-      Kino.Layout.grid(
-        [
-          Kino.Download.new(fn -> Jason.encode!(blueprint) end,
-            filename: "blueprint.json",
-            label: "Blueprint.json"
-          ),
-          Kino.Download.new(fn -> bytes end,
-            filename: "project.zip",
-            label: "Project.zip"
-          )
-        ],
-        columns: 2,
-        boxed: true
-      )
+      compress_project(app["path"])
+      |> show_downloads(bytes, blueprint)
     end
   end
 
@@ -847,5 +820,33 @@ defmodule GenEditor.ElementEditor do
     |> Enum.map(fn element ->
       element |> Map.put("path", app["path"])
     end)
+  end
+
+  defp show_downloads(bytes, blueprint) do
+    IO.puts("Files are ready")
+    Kino.Layout.grid(
+      [
+        Kino.Download.new(fn -> Jason.encode!(blueprint) end,
+          filename: "blueprint.json",
+          label: "Blueprint.json"
+        ),
+        Kino.Download.new(fn -> bytes end,
+          filename: "project.zip",
+          label: "Project.zip"
+        )
+      ],
+      columns: 2,
+      boxed: true
+    )
+  end
+
+  defp compress_project(app) do
+    IO.puts("Compressing project...")
+
+    files = File.ls!("./" <> app["path"]) |> Enum.map(&String.to_charlist/1)
+
+    # Not handled to show errors in cell
+    {:ok, {filename, bytes}} =
+      :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]])
   end
 end
