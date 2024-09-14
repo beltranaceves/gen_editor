@@ -1,0 +1,340 @@
+<!-- livebook:{"default_language":"erlang","persist_outputs":true} -->
+
+# TFG Playground
+
+```elixir
+Mix.install([
+  {:gen_editor, "~> 0.3.3"},
+  {:kino_vega_lite, "~> 0.1.10"}
+])
+```
+
+## Section
+
+Template with the following features:
+
+* User Authentication
+* Email Notifications
+* User Comment entities, migration and CRUD views
+* System admins
+
+<!-- livebook:{"attrs":"eyJhcHAiOiJTYW1wbGVBcHAiLCJiaW5hcnlfaWQiOmZhbHNlLCJkYXRhYmFzZSI6InBvc3RncmVzIiwiaGVscF9ib3hfdHlwZSI6ImlmcmFtZSIsImluc3RhbGwiOnRydWUsImlzSGVscEJveEhpZGRlbiI6dHJ1ZSwibW9kdWxlIjoiIiwibm9fYXNzZXRzIjpmYWxzZSwibm9fZGFzaGJvYXJkIjpmYWxzZSwibm9fZWN0byI6ZmFsc2UsIm5vX2VzYnVpbGQiOmZhbHNlLCJub19nZXR0ZXh0IjpmYWxzZSwibm9faHRtbCI6ZmFsc2UsIm5vX2luc3RhbGwiOmZhbHNlLCJub19saXZlIjpmYWxzZSwibm9fbWFpbGVyIjpmYWxzZSwibm9fdGFpbHdpbmQiOmZhbHNlLCJwYXRoIjoic2FtcGxlX2FwcCIsInR5cGUiOiJBcHAiLCJ2ZXJib3NlIjpmYWxzZSwidmVyc2lvbiI6ZmFsc2V9","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint = %{
+  metadata: [],
+  dependencies: [],
+  pretasks: [],
+  generable_elements: [
+    %{
+      "app" => "SampleApp",
+      "binary_id" => false,
+      "database" => "postgres",
+      "help_box_type" => "iframe",
+      "install" => true,
+      "isHelpBoxHidden" => true,
+      "no_assets" => false,
+      "no_dashboard" => false,
+      "no_ecto" => false,
+      "no_esbuild" => false,
+      "no_gettext" => false,
+      "no_html" => false,
+      "no_install" => false,
+      "no_live" => false,
+      "no_mailer" => false,
+      "no_tailwind" => false,
+      "path" => "sample_app",
+      "type" => "App",
+      "verbose" => false,
+      "version" => false
+    }
+  ],
+  posttasks: []
+}
+
+{:ok, "Added: App"}
+```
+
+<!-- livebook:{"attrs":"eyJjb250ZXh0IjoiQXV0aGVudGljYXRpb24iLCJoZWxwX2JveF90eXBlIjoiaWZyYW1lIiwiaXNIZWxwQm94SGlkZGVuIjp0cnVlLCJtZXJnZV93aXRoX2V4aXN0aW5nX2NvbnRleHQiOnRydWUsIm5vX21lcmdlX3dpdGhfZXhpc3RpbmdfY29udGV4dCI6ZmFsc2UsIm5vX3NjaGVtYSI6ZmFsc2UsInNjaGVtYSI6IiIsInN0YW5kYWxvbmUiOmZhbHNlLCJ0eXBlIjoiQ29udGV4dCJ9","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint =
+  blueprint
+  |> Map.update!(
+    :metadata,
+    &(&1 ++
+        [
+          %{
+            "context" => "Authentication",
+            "help_box_type" => "iframe",
+            "isHelpBoxHidden" => true,
+            "merge_with_existing_context" => true,
+            "no_merge_with_existing_context" => false,
+            "no_schema" => false,
+            "standalone" => false,
+            "type" => "Context"
+          }
+        ])
+  )
+
+{:ok, "Added: " <> "Context"}
+```
+
+<!-- livebook:{"attrs":"eyJoZWxwX2JveF90eXBlIjoiaWZyYW1lIiwiaXNIZWxwQm94SGlkZGVuIjp0cnVlLCJtb2R1bGUiOiJBZG1pbmlzdHJhdGlvbiIsInN0YW5kYWxvbmUiOmZhbHNlLCJ0eXBlIjoiTW9kdWxlIn0","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint =
+  blueprint
+  |> Map.update!(
+    :metadata,
+    &(&1 ++
+        [
+          %{
+            "help_box_type" => "iframe",
+            "isHelpBoxHidden" => true,
+            "module" => "Administration",
+            "standalone" => false,
+            "type" => "Module"
+          }
+        ])
+  )
+
+{:ok, "Added: " <> "Module"}
+```
+
+<!-- livebook:{"attrs":"eyJiaW5hcnlfaWQiOnRydWUsImNvbnRleHRfYXBwIjoiIiwiZmllbGRzIjpbXSwiaGVscF9ib3hfdHlwZSI6ImlmcmFtZSIsImlzSGVscEJveEhpZGRlbiI6dHJ1ZSwibWlncmF0aW9uX2RpciI6IiIsIm1vZHVsZSI6IkFkbWluaXN0cmF0aW9uIiwibm9fbWlncmF0aW9uIjpmYWxzZSwicGx1cmFsIjoiYWRtaW5pc3RyYXRvcnMiLCJwcmVmaXgiOiIiLCJyZXBvIjoiIiwic3RhbmRhbG9uZSI6ZmFsc2UsInRhYmxlIjoiIiwidHlwZSI6IlNjaGVtYSJ9","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint =
+  blueprint
+  |> Map.update!(
+    :metadata,
+    &(&1 ++
+        [
+          %{
+            "binary_id" => true,
+            "help_box_type" => "iframe",
+            "isHelpBoxHidden" => true,
+            "module" => "Administration",
+            "no_migration" => false,
+            "plural" => "administrators",
+            "standalone" => false,
+            "type" => "Schema"
+          }
+        ])
+  )
+
+{:ok, "Added: " <> "Schema"}
+```
+
+<!-- livebook:{"attrs":"eyJjb250ZXh0IjoiQXV0aGVudGljYXRpb24iLCJoZWxwX2JveF90eXBlIjoiaWZyYW1lIiwiaXNIZWxwQm94SGlkZGVuIjp0cnVlLCJsaXZlIjp0cnVlLCJub19saXZlIjpmYWxzZSwic2NoZW1hIjoiYWRtaW5pc3RyYXRvcnMiLCJ0eXBlIjoiQXV0aCIsIndlYiI6IiJ9","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint =
+  blueprint
+  |> Map.update!(
+    :generable_elements,
+    &(&1 ++
+        [
+          %{
+            "context" => "Authentication",
+            "help_box_type" => "iframe",
+            "isHelpBoxHidden" => true,
+            "live" => true,
+            "no_live" => false,
+            "schema" => "administrators",
+            "type" => "Auth"
+          }
+        ])
+  )
+
+{:ok, "Added: " <> "Auth"}
+```
+
+<!-- livebook:{"attrs":"eyJjb250ZXh0IjoiQ29udGVudCIsImhlbHBfYm94X3R5cGUiOiJpZnJhbWUiLCJpc0hlbHBCb3hIaWRkZW4iOnRydWUsIm1lcmdlX3dpdGhfZXhpc3RpbmdfY29udGV4dCI6dHJ1ZSwibm9fbWVyZ2Vfd2l0aF9leGlzdGluZ19jb250ZXh0IjpmYWxzZSwibm9fc2NoZW1hIjpmYWxzZSwic2NoZW1hIjoiIiwic3RhbmRhbG9uZSI6ZmFsc2UsInR5cGUiOiJDb250ZXh0In0","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint =
+  blueprint
+  |> Map.update!(
+    :metadata,
+    &(&1 ++
+        [
+          %{
+            "context" => "Content",
+            "help_box_type" => "iframe",
+            "isHelpBoxHidden" => true,
+            "merge_with_existing_context" => true,
+            "no_merge_with_existing_context" => false,
+            "no_schema" => false,
+            "standalone" => false,
+            "type" => "Context"
+          }
+        ])
+  )
+
+{:ok, "Added: " <> "Context"}
+```
+
+<!-- livebook:{"attrs":"eyJoZWxwX2JveF90eXBlIjoiaWZyYW1lIiwiaXNIZWxwQm94SGlkZGVuIjp0cnVlLCJtb2R1bGUiOiJDb21tZW50Iiwic3RhbmRhbG9uZSI6ZmFsc2UsInR5cGUiOiJNb2R1bGUifQ","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint =
+  blueprint
+  |> Map.update!(
+    :metadata,
+    &(&1 ++
+        [
+          %{
+            "help_box_type" => "iframe",
+            "isHelpBoxHidden" => true,
+            "module" => "Comment",
+            "standalone" => false,
+            "type" => "Module"
+          }
+        ])
+  )
+
+{:ok, "Added: " <> "Module"}
+```
+
+<!-- livebook:{"attrs":"eyJiaW5hcnlfaWQiOmZhbHNlLCJjb250ZXh0X2FwcCI6IiIsImZpZWxkcyI6W3siZGF0YXR5cGUiOiJiaW5hcnlfaWQiLCJmaWVsZF9uYW1lIjoidXNlciJ9LHsiZGF0YXR5cGUiOiJzdHJpbmciLCJmaWVsZF9uYW1lIjoidGl0bGUifSx7ImRhdGF0eXBlIjoic3RyaW5nIiwiZmllbGRfbmFtZSI6ImNvbnRlbnQifSx7ImRhdGF0eXBlIjoiYm9vbGVhbiIsImZpZWxkX25hbWUiOiJpc19wdWJsaWMifV0sImhlbHBfYm94X3R5cGUiOiJpZnJhbWUiLCJpc0hlbHBCb3hIaWRkZW4iOnRydWUsIm1pZ3JhdGlvbl9kaXIiOiIiLCJtb2R1bGUiOiJDb21tZW50Iiwibm9fbWlncmF0aW9uIjpmYWxzZSwicGx1cmFsIjoiY29tbWVudHMiLCJwcmVmaXgiOiIiLCJyZXBvIjoiIiwic3RhbmRhbG9uZSI6ZmFsc2UsInRhYmxlIjoiIiwidHlwZSI6IlNjaGVtYSJ9","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint =
+  blueprint
+  |> Map.update!(
+    :metadata,
+    &(&1 ++
+        [
+          %{
+            "binary_id" => false,
+            "fields" => [
+              %{"datatype" => "binary_id", "field_name" => "user"},
+              %{"datatype" => "string", "field_name" => "title"},
+              %{"datatype" => "string", "field_name" => "content"},
+              %{"datatype" => "boolean", "field_name" => "is_public"}
+            ],
+            "help_box_type" => "iframe",
+            "isHelpBoxHidden" => true,
+            "module" => "Comment",
+            "no_migration" => false,
+            "plural" => "comments",
+            "standalone" => false,
+            "type" => "Schema"
+          }
+        ])
+  )
+
+{:ok, "Added: " <> "Schema"}
+```
+
+<!-- livebook:{"attrs":"eyJjb250ZXh0IjoiQ29udGVudCIsImNvbnRleHRfYXBwIjoiIiwiaGVscF9ib3hfdHlwZSI6ImlmcmFtZSIsImlzSGVscEJveEhpZGRlbiI6dHJ1ZSwibm9fY29udGV4dCI6ZmFsc2UsIm5vX3NjaGVtYSI6ZmFsc2UsInNjaGVtYSI6ImNvbW1lbnRzIiwidHlwZSI6Ikh0bWwiLCJ3ZWIiOiIifQ","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+blueprint =
+  blueprint
+  |> Map.update!(
+    :generable_elements,
+    &(&1 ++
+        [
+          %{
+            "context" => "Content",
+            "help_box_type" => "iframe",
+            "isHelpBoxHidden" => true,
+            "no_context" => false,
+            "no_schema" => false,
+            "schema" => "comments",
+            "type" => "Html"
+          }
+        ])
+  )
+
+{:ok, "Added: " <> "Html"}
+```
+
+<!-- livebook:{"attrs":"eyJoZWxwX2JveF90eXBlIjoiaWZyYW1lIiwiaXNIZWxwQm94SGlkZGVuIjp0cnVlLCJ0eXBlIjoiQmx1ZXByaW50In0","chunks":null,"kind":"Elixir.GenEditor.ElementEditor","livebook_object":"smart_cell"} -->
+
+```elixir
+app =
+  blueprint
+  |> Map.fetch!(:generable_elements)
+  |> Enum.filter(fn element -> element["type"] == "App" end)
+  |> Enum.at(0)
+
+blueprint =
+  blueprint
+  |> Map.put(
+    :metadata,
+    blueprint
+    |> Map.fetch!(:metadata)
+    |> Enum.map(fn element -> element |> Map.put("path", app["path"]) end)
+  )
+
+generable_elements =
+  blueprint
+  |> Map.fetch!(:generable_elements)
+  |> Enum.map(fn element -> element |> Map.put("path", app["path"]) end)
+
+schemas =
+  blueprint
+  |> Map.fetch!(:metadata)
+  |> Enum.filter(fn element -> element["type"] == "Schema" end)
+
+generable_elements =
+  generable_elements |> Enum.filter(fn element -> element["type"] != "App" end)
+
+generable_elements =
+  generable_elements
+  |> Enum.map(fn element ->
+    case Enum.member?(
+           ["Auth", "Context", "Html", "Json", "JSON", "Live"],
+           element["type"]
+         ) do
+      true ->
+        schema =
+          schemas
+          |> Enum.filter(fn schema ->
+            IO.puts("SEARCHING FOR SCHEMA: #{inspect(schema)}")
+            IO.puts("WITH ELEMENT: #{inspect(element)}")
+            schema["plural"] == element["schema"]
+          end)
+          |> Enum.at(0)
+
+        element |> Map.put("schema", schema)
+
+      false ->
+        element
+    end
+  end)
+
+blueprint =
+  blueprint |> Map.put(:generable_elements, generable_elements) |> Map.put(:app, app)
+
+GenDSL.generate_from_blueprint(blueprint, false, File.cwd!())
+
+Kino.Download.new(fn -> Jason.encode!(blueprint) end,
+  filename: "blueprint.json",
+  label: "Json file"
+)
+
+IO.puts("Compressing project...")
+files = File.ls!("./" <> app["path"]) |> Enum.map(&String.to_charlist/1)
+
+{:ok, {filename, bytes}} =
+  :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]])
+
+IO.puts("Files are ready")
+
+Kino.Layout.grid(
+  [
+    Kino.Download.new(fn -> Jason.encode!(blueprint) end,
+      filename: "blueprint.json",
+      label: "Blueprint.json"
+    ),
+    Kino.Download.new(fn -> bytes end, filename: "project.zip", label: "Project.zip")
+  ],
+  columns: 2,
+  boxed: true
+)
+```
