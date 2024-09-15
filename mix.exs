@@ -10,14 +10,17 @@ defmodule GenEditor.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       source_url: "https://github.com/beltranaceves/gen_editor",
-      homepage_url: "HEX_URL",
+      homepage_url: "https://hex.pm/packages/gen_editor",
       package: [
         maintainers: ["Beltrán Aceves Gil"],
         licenses: ["MIT"],
         links: %{
           "GitHub" => "https://github.com/beltranaceves/gen_editor"
         }
-      ]
+      ],
+      # Docs
+      name: "gen_editor",
+      docs: docs()
     ]
   end
 
@@ -41,6 +44,15 @@ defmodule GenEditor.MixProject do
       # {:gen_dsl, path: "../gen_dsl", only: :dev}
       {:gen_dsl, "~> 0.3.7"},
       {:gen_cli, "~> 0.2.2"}
+    ]
+  end
+
+  defp docs() do
+    [
+      main: "README",
+      extras: ["README.md", "LICENSE"]
+      # TODO: add cheatsheet.cheatmd, and tutorial.livemd
+      # logo # TODO: design logo for the entire toolchain
     ]
   end
 end
