@@ -850,7 +850,7 @@ defmodule GenEditor.ElementEditor do
     files = File.ls!("./" <> app["path"]) |> Enum.map(&String.to_charlist/1)
 
     # Not handled to show errors in cell
-    {:ok, {filename, bytes}} =
+    {:ok, {filename, _bytes}} =
       :zip.create("project.zip", files, [:memory, cwd: "./" <> app["path"]])
   end
 end
