@@ -50,7 +50,8 @@ defmodule GenEditor.ElementEditor do
     }
 
     fields = %{
-      "help_box_type" => attrs["help_box_type"] || "iframe", # iframe or simple
+      # iframe or simple
+      "help_box_type" => attrs["help_box_type"] || "iframe",
       "isHelpBoxHidden" => attrs["isHelpBoxHidden"] || true,
       "UUID" => UUID.uuid1(),
       "placeholder" => "Enter a value",
@@ -631,7 +632,10 @@ defmodule GenEditor.ElementEditor do
 
       # Replaces the type with the full module path # TODO: make this pretty, maybe move to function, same with the rest of the function to_quoted
       generable_elements =
-        generable_elements |> Enum.map(fn element -> element |> Map.replace("type", "GenDSL.Model." <> element |> Map.get("type")) end)
+        generable_elements
+        |> Enum.map(fn element ->
+          element |> Map.replace("type", ("GenDSL.Model." <> element) |> Map.get("type"))
+        end)
 
       generable_elements = references_to_embedded(generable_elements, schemas)
 
@@ -641,7 +645,6 @@ defmodule GenEditor.ElementEditor do
         |> Map.put(:app, app)
 
       GenDSL.generate_from_blueprint(blueprint, false, File.cwd!())
-
 
       compress_project(app["path"])
       |> show_downloads(bytes, blueprint)
@@ -824,6 +827,7 @@ defmodule GenEditor.ElementEditor do
 
   defp show_downloads(bytes, blueprint) do
     IO.puts("Files are ready")
+
     Kino.Layout.grid(
       [
         Kino.Download.new(fn -> Jason.encode!(blueprint) end,
