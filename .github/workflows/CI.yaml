@@ -9,14 +9,14 @@ jobs:
     env:
       MIX_ENV: test
 
-    services:
-      db:
-        image: postgres:15-alpine
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_DB: project_test
-          POSTGRES_USER: project
-          POSTGRES_PASSWORD: mycoolpassword
+    # services:
+    #   db:
+    #     image: postgres:15-alpine
+    #     ports: ["5432:5432"]
+    #     env:
+    #       POSTGRES_DB: project_test
+    #       POSTGRES_USER: project
+    #       POSTGRES_PASSWORD: mycoolpassword
 
     steps:
       - uses: actions/checkout@v3
@@ -24,8 +24,8 @@ jobs:
       - name: Setup Erlang and Elixir
         uses: erlef/setup-beam@v1.13.1
         with:
-          elixir-version: "1.14.1"
-          otp-version: "25.1.2"
+          elixir-version: "1.17.1"
+          otp-version: "27"
 
       - name: Mix and build cache
         uses: actions/cache@v3
